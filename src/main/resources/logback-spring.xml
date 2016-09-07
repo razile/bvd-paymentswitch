@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/base.xml"/>
+		
+	<springProfile name="development">
+		<property name="LOG_PATH" value="/logs/development" />
+    	<property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" />
+		<property name="LOG_LEVEL" value="debug" />
+	</springProfile>
+
+	<springProfile name="production">
+		<property name="LOG_PATH" value="/logs/production" />
+    	<property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" />
+		<property name="LOG_LEVEL" value="debug" />
+	</springProfile>
+	
+	<appender name="Request-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/request.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ARCHIVE}/request.log%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1KB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+             <pattern>%d		%msg%n</pattern>
+        </encoder>
+    </appender>
+	<appender name="Response-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/response.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ARCHIVE}/response.log%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1KB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d		%msg%n</pattern>
+        </encoder>
+    </appender>
+	<appender name="Application-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ARCHIVE}/application.log%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1KB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d %-5level [%thread] %logger{0}:  %msg%n</pattern>
+        </encoder>
+    </appender>
+
+ 	<appender name="Request" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="Request-Appender" />
+    </appender>
+ 	<appender name="Response" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="Response-Appender" />
+    </appender>
+ 	<appender name="Application" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="Application-Appender" />
+    </appender>
+	
+	<logger name="Request-Logger" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Request"/>
+	</logger>
+	
+	<logger name="Response-Logger" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Response"/>
+	</logger>
+	
+	<logger name="com.bvd.paymentswitch" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Application"/>
+		<appender-ref ref="CONSOLE"/>
+	</logger>
+<!-- 	<root level="debug">
+		<appender-ref ref="CONSOLE"/>
+	</root> -->
+</configuration>
