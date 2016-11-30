@@ -16,8 +16,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.bvd.paymentswitch.server.PaymentSwitch;
 import com.bvd.paymentswitch.server.PaymentSwitchInitializer;
@@ -29,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,31 +45,31 @@ import org.slf4j.LoggerFactory;
  * 
 */
 @SpringBootApplication
-//@PropertySource(value= "classpath:/properties/development/paymentswitch.properties")
-
-public class Application {
+@EnableAsync
+@EnableCaching
+@EnableSpringConfigured
+public class Application  {
    
 	static final Logger logger = LoggerFactory.getLogger(Application.class);
-//	@Configuration
-//    @Profile("production")
-//    //@PropertySource("classpath:/properties/production/paymentswitch.properties")
-//    static class Production
-//    { }
-//
-//    @Configuration
-//    @Profile("development")
-//    @PropertySource({"classpath:/properties/development/paymentswitch.properties"})
-//    static class Local
-//    { }
 
     public static void main(String[] args) throws Exception{
         ConfigurableApplicationContext context = SpringApplication.run(Application.class, args);
         PaymentSwitch server = context.getBean(PaymentSwitch.class);
-        server.seedData();
         server.start();
-
     }
-
+    
+    @Bean(name="threadPoolTaskExecutor")
+    public Executor threadPoolTaskExecutor() {
+    	ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    	executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(16);
+        executor.setQueueCapacity(1000);
+        executor.setThreadNamePrefix("SaveAuth-");
+        executor.initialize();
+        return executor;
+    }
+    
+    
     @Value("${tcp.port}")
     private int tcpPort;
 
@@ -84,6 +90,11 @@ public class Application {
     
     @Value("${charset.encoding}")
     private String encoding;
+        
+    @Autowired
+    @Qualifier("paymentSwitchInitializer")
+    private PaymentSwitchInitializer paymentSwitchInitializer;
+   
 
     @SuppressWarnings("unchecked")
     @Bean(name = "serverBootstrap")
@@ -100,10 +111,6 @@ public class Application {
         }
         return b;
     }
-
-    @Autowired
-    @Qualifier("paymentSwitchInitializer")
-    private PaymentSwitchInitializer paymentSwitchInitializer;
 
     @Bean(name = "tcpChannelOptions")
     public Map<ChannelOption<?>, Object> tcpChannelOptions() {

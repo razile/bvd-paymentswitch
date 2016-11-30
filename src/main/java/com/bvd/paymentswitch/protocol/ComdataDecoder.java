@@ -12,15 +12,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.string.StringDecoder;
 
 @Component
-@Qualifier("decoder")
-public class STX_ETX_Decoder extends StringDecoder {
+@Qualifier("comdata-decoder")
+public class ComdataDecoder extends StringDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
     	String s = msg.toString(ProtocolUtils.APP_CHARSET);
     	
     	// check for STX 
-    	if (s.startsWith(String.valueOf(ASCIIChars.STX))) {
+    	if (s.startsWith(String.valueOf(ASCIIChars.ASC123))) {
     		s = s.substring(1);
     	}
     	

@@ -7,16 +7,13 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 
-import com.bvd.paymentswitch.models.CustomPrompts;
-import com.bvd.paymentswitch.models.KardallHostAuthorization;
-import com.bvd.paymentswitch.models.PriorPostAuthorization;
 
 import java.util.List;
 
@@ -67,21 +64,6 @@ public class ProtocolUtils {
 		}
 	}
 	
-	
-	public static void setPrompts(KardallHostAuthorization request, PriorPostAuthorization response) {
-		if (response.getDriverID() != null) request.addPrompt("D1");
-		if (response.getDriversLicenseNumber() != null) request.addPrompt("L1");
-		if (response.getUnitNumber() != null) request.addPrompt("M2");
-		if (response.getVehiclePlateNumber() != null) request.addPrompt("M3");
-		if (response.getPoNumber() != null) request.addPrompt("M6");
-		if (response.getOdometerReading() != null) request.addPrompt("O1");
-		if (response.getTrailerNumber() != null) request.addPrompt("TN");
-	}
-	
-	public static void setCustomPrompts(KardallHostAuthorization request, PriorPostAuthorization response) {
-		if (response.getHubReading() != null) request.addCustomPrompt(CustomPrompts.HBRD.getElement(),CustomPrompts.HBRD.getPrompt());
-		if (response.getTrip() != null) request.addCustomPrompt(CustomPrompts.TRIP.getElement(),CustomPrompts.TRIP.getPrompt());
-	}
 	
 	
 	public static BigDecimal getBigDecimal(String nstr, int scale) {
@@ -136,9 +118,11 @@ public class ProtocolUtils {
 	
 		int messageLength = request.length();
 		
-		int inDigit = getCodePoint(request.charAt(messageLength-1));   // should be the last character
+		int inDigit = Integer.parseInt(request.substring(messageLength - 3));  // last 3 chars are the int value 
 		
-		String cText = request.substring(0, messageLength-1);
+		// int inDigit = getCodePoint(request.charAt(messageLength-1));   // should be the last character
+		
+		String cText = request.substring(0, messageLength-3);
 		
 		int nChkDigit = calculateCheckDigit(cText);
 		
@@ -152,14 +136,48 @@ public class ProtocolUtils {
 			int codepoint = getCodePoint(cText.charAt(i));
 			//System.err.println("nChkDigit: " + nChkDigit + ", XOR With: " + cText.charAt(i) +  " (codepoint= " + codepoint + ")");
 			nChkDigit = nChkDigit^codepoint;
+			//System.out.println(nChkDigit);
 		}
 		
-		if (nChkDigit == 0 || nChkDigit == 2 || nChkDigit == 3 || nChkDigit == 21) {
+		if (nChkDigit < 32) { // == 0 < || nChkDigit == 2 || nChkDigit == 3 || nChkDigit == 21) {
 			nChkDigit = 255 - nChkDigit;
 		}
 		
 		return nChkDigit;
 	}
+	
+	public static int getInteger(String binaryString) {
+		try {
+			return Integer.parseUnsignedInt(binaryString, 2);
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+	
+	
+	public static String getBinary(String iStr) {
+		try {
+			int i = Integer.parseInt(iStr);
+			String bitMap = Integer.toBinaryString(i);
+			
+			while (bitMap.length() < 8) {
+				bitMap = "0" + bitMap;
+			}
+			
+			return bitMap;
+		} catch (Exception e) {
+			return "00000000";
+		}
+	}
+	
+	
+	public static String encodeInteger(int i) {
+		String s = String.valueOf(i);
+		while (s.length() < 3) {
+			s = "0" + s;
+		}
+		return s;
+	}	
 	
 	public static String getCharacter(String binaryString) {
 		int val = Integer.parseInt(binaryString, 2);
@@ -184,6 +202,40 @@ public class ProtocolUtils {
 		}
 		
 		return codepoint;
+	}
+
+	public static String formatErrors(String errorCode) {
+		// CODE:017,TEXT:INVALID UNIT ENTRY/CODE:017,TEXT:INVALID DRID ENTRY
+		
+		if (errorCode == null) return null;
+		List<String> codes = new ArrayList<String>();
+		String[] errors = errorCode.split("/");
+		
+		for (String e: errors) {
+			String[] codetext = e.split(",");
+			AbstractMap.SimpleEntry<String, String> codevalue = parseToken(codetext[0]);
+			String value = codevalue.getValue();
+			if (!codes.contains(value)) codes.add(value);
+		}
+		
+		String x = ""; 
+		
+		for (String s : codes) {
+			x += s + ",";
+		}
+		return x.substring(0, x.length()-1);
+	}
+	
+	
+	public static String finalizePrePostRequest(String msg, int lengthModifier) {
+		// determine length of message
+		int length = msg.length() + 6  + lengthModifier;   // the 6 extra are for the 4 bytes of length, the STX and ETX.  The extra length modifier is provider-specific
+		String lstr = String.valueOf(length);
+		while (lstr.length() < 4) {
+			lstr = "0" + lstr;
+		}
+		
+		return (lstr + msg);
 	}
 
 	

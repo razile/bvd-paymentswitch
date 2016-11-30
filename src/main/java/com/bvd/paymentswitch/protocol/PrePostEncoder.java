@@ -17,9 +17,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.string.StringEncoder;
 
 @Component
-@Qualifier("efs-encoder")
-public class EFSEncoder extends StringEncoder {
-	static final Logger logger = LoggerFactory.getLogger(EFSEncoder.class);
+@Qualifier("prepost-encoder")
+public class PrePostEncoder extends StringEncoder {
+	static final Logger logger = LoggerFactory.getLogger(PrePostEncoder.class);
 	
     @Override
     protected void encode(ChannelHandlerContext ctx, CharSequence msg, List<Object> out) throws Exception {
@@ -27,11 +27,11 @@ public class EFSEncoder extends StringEncoder {
        //     return;
        // }
         
-        String message = "PV|" + ProtocolUtils.finalizePrePostRequest(msg.toString(), 3);
+    	String message = ProtocolUtils.finalizePrePostRequest(msg.toString(), 0);
         logger.debug("SEND: " + message);
-       
-        message = ASCIIChars.STX + message + ASCIIChars.ETX + "\n\r";
-      
+        
+        message = ASCIIChars.STX +  message + ASCIIChars.ETX;
+        
         CharBuffer cb = CharBuffer.wrap(message.toCharArray());
         ByteBuf bytes = ByteBufUtil.encodeString(ctx.alloc(), cb, ProtocolUtils.APP_CHARSET);
         out.add(bytes);

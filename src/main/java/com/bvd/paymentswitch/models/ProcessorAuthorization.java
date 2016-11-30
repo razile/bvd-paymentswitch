@@ -2,34 +2,31 @@ package com.bvd.paymentswitch.models;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 @Entity
-public class PriorPostAuthorization {
-	
+public class ProcessorAuthorization {
+
 	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
 	// required fields - header
 	
-	@Column(length=2)
+	@Column(length=7)
 	private String type;				// Character (2)	Request: IC (pre), AC (post)  VC (void), Response: PC (pre-approved), RC (post/void-approved), XC or EC (declined)
-	
+										// Comdata: SP00007, 00014, 00011
 	@Column(length=16)
 	private String location;
 	
 	@Column(length=5)
-	private String versionNumber;
+	private String versionNumber;	
 	
 	@Transient
 	private int count;
@@ -65,13 +62,13 @@ public class PriorPostAuthorization {
 	private String cardNumber;			// Character		CARD:   card number and how entered (S=swiped)  |CARD:1234567890,S|
 	
 	// Optional Extended Fields Prompts
-	@Column(length=16)
+	@Column(length=32)
 	private String hubReading;			// Character (6)	HBRD:
 	
-	@Column(length=16)
+	@Column(length=32)
 	private String trailerNumber;		// Character (12)	TRLR:
 	
-	@Column(length=16)
+	@Column(length=32)
 	private String unitNumber;			// Character (12)	UNIT:
 	
 	@Column(length=32)
@@ -80,16 +77,16 @@ public class PriorPostAuthorization {
 	@Column(length=32)
 	private String driversLicenseNumber;// Character (20)	DLIC:
 	
-	@Column(length=16)
+	@Column(length=32)
 	private String odometerReading;		// Character		ODRD:
 	
-	@Column(length=8)
+	@Column(length=32)
 	private String trip;				// Character		TRIP:	trip number
 	
-	@Column(length=16)
+	@Column(length=32)
 	private String vehiclePlateNumber;	//					LICN:  Vehicle license plate number
 	
-	@Column(length=16)
+	@Column(length=32)
 	private String poNumber;			//					PONB:	purchase order number
 	
 	
@@ -100,7 +97,7 @@ public class PriorPostAuthorization {
 	@Column(precision=11,scale=2)
 	private BigDecimal total;			// N/A	TOTL:  limit amount associated with total transaction
 	
-	@Column(length=32)
+	@Column(length=256)
 	private String fuel;					// N/A	FUEL:    total fuel limit by volume,currency 
 	// fuelTypesAllowed	N/A (see bit mapping in type table)	FTYP:
 	// fuelUseAllowed	N/A (see bit mapping in type table)	FUSE:
@@ -118,169 +115,16 @@ public class PriorPostAuthorization {
 	@Column(length=256)
 	private String print;				// PRNT:
 	
+	@Column(length=5) 
+	private String responseCode;
+	
 	private Timestamp createTimestamp;
 
 	
-	public PriorPostAuthorization() {
+	public ProcessorAuthorization() {
 		super();
 	}
 	
-	
-	public PriorPostAuthorization(KardallHostAuthorization request) {
-		
-		// map common fields
-		this.id = request.getId();
-		int transType = request.getTransactionType();
-		this.invoiceNumber = request.getTrnNo();
-		this.cardNumber = request.getCard1() + ",S";  
-		this.cardToken = request.getCard2();
-		this.posCurrency = "CAD";		// canadian funds
-		this.registerIndicator = "C"; 	// transaction originated from card reader
-		this.location = "T2222A";
-		this.versionNumber = "01.10";
-		this.count = 1;
-		
-		
-		// prompts
-		this.driverID = request.getDocument();
-		this.driversLicenseNumber = request.getDriversLicense();
-		this.unitNumber = request.getUnit();
-		this.poNumber = request.getPo();
-		this.odometerReading = request.getOdometer();
-		this.trailerNumber = request.getTrailerNumber();
-		this.hubReading = request.getHubometer();
-		this.trip = request.getTripNumber();
-		this.vehiclePlateNumber = request.getTruck();
-		
-		
-		BigDecimal sellingPrice = request.getSellingPrice();
-		String fuelType = "2"; // request.getFuelType();
-		// specific tokens by lifecycle
-		if (transType == 0) {  
-			// this is a prior
-			this.type = "IC";
-			this.customerInformation = "I";
-			//this.fuel = "1.000," + request.getSellingPrice() + ",0.00," + fuelType + ",1,1";
-			
-		} else {
-			// this is a post (completed transaction)
-			this.type = "AC";
-			this.authorizationCode = request.getAuthId().trim();
-			this.customerInformation = "I";
-			
-			BigDecimal quantity = request.getQuantityNet();
-			BigDecimal amount = request.getAmount();
-			
-			String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + ",1,1";
-			this.total = amount;
-			this.fuel = fuelToken;  
-		}
-	}
-	
-	public PriorPostAuthorization(Long id, String response) {
-		
-		this.id = id;
-		String[] fields = response.split("\\|");
-		
-		this.type = fields[1];
-		this.location = fields[2];
-		this.versionNumber = fields[3];
-		this.count = Integer.parseInt(fields[4]);
-		
-		Map<String, String> tokens = new HashMap<String, String>();
-		for (int i = 5; i<fields.length; i++) {
-			AbstractMap.SimpleEntry<String, String> entry = ProtocolUtils.parseToken(fields[i]);
-			if (entry != null)
-				tokens.put(entry.getKey(), entry.getValue());
-		}
-
-		this.softwareSystem = tokens.get("SSVR");    	// Character (5)	SSRV:XXXXX		
-		this.posCurrency = tokens.get("CNC");
-		this.language = tokens.get("LNG");
-		this.unitofMeasure = tokens.get("UOM");
-		this.registerIndicator = tokens.get("FROM");
-		this.customerInformation = tokens.get("CUST");
-		this.invoiceNumber = tokens.get("INVN");
-		this.cardToken = tokens.get("CDSW");
-		
-		String cardNumber = tokens.get("CARD");
-		if (cardNumber != null) {
-			this.cardNumber = cardNumber.split(",")[0];
-		}
-		
-		this.hubReading = tokens.get("HBRD");
-		this.trailerNumber = tokens.get("TRLR");
-		this.unitNumber = tokens.get("UNIT");
-		this.driverID = tokens.get("DRID");
-		this.driversLicenseNumber = tokens.get("DLIC");
-		this.odometerReading = tokens.get("ODRD");
-		this.trip = tokens.get("TRIP");
-		this.vehiclePlateNumber = tokens.get("LICN");
-		this.poNumber = tokens.get("PONB");
-		
-		this.authorizationCode = tokens.get("AUTH");
-		this.fuel = tokens.get("FUEL");
-		this.fuelLimit = tokens.get("FLMT");
-		if (tokens.get("TOTL") != null) this.total = ProtocolUtils.getBigDecimal(tokens.get("TOTL"),2);
-
-		this.errorCode = tokens.get("ERCD");
-		this.print = tokens.get("PRNT");
-		this.message = tokens.get("MSG");
-
-	}
-	
-	@Override
-	public String toString() {
-		String msg = "|" + this.type + "|" + this.location + "|" + this.versionNumber + "|" +  this.count + "|";
-		
-		List<String> tokens = new ArrayList<String>();
-		
-		ProtocolUtils.createToken("CUST", this.customerInformation, tokens);
-		ProtocolUtils.createToken("SSVR", this.softwareSystem, tokens);   	
-		ProtocolUtils.createToken("CNC", this.posCurrency, tokens);
-		ProtocolUtils.createToken("LNG", this.language, tokens);
-		ProtocolUtils.createToken("UOM", this.unitofMeasure, tokens);
-		ProtocolUtils.createToken("FROM", this.registerIndicator, tokens);
-	
-		ProtocolUtils.createToken("INVN", this.invoiceNumber, tokens);
-		ProtocolUtils.createToken("CDSW", this.cardToken, tokens);
-		ProtocolUtils.createToken("CARD", this.cardNumber, tokens);
-		ProtocolUtils.createToken("AUTH", this.authorizationCode, tokens);
-		
-	
-		ProtocolUtils.createToken("FUEL", this.fuel, tokens);
-		ProtocolUtils.createToken("FLMT", this.fuelLimit, tokens);
-		if (this.total != null) ProtocolUtils.createToken("TOTL", total.toPlainString(), tokens);
-		
-		ProtocolUtils.createToken("HBRD", this.hubReading, tokens);
-		ProtocolUtils.createToken("TRLR", this.trailerNumber, tokens);
-		ProtocolUtils.createToken("UNIT", this.unitNumber, tokens);
-		ProtocolUtils.createToken("DRID", this.driverID, tokens);
-		ProtocolUtils.createToken("DLIC", this.driversLicenseNumber, tokens);
-		ProtocolUtils.createToken("ODRD", this.odometerReading, tokens);
-		ProtocolUtils.createToken("TRIP", this.trip, tokens);
-		ProtocolUtils.createToken("LICN", this.vehiclePlateNumber, tokens);
-		ProtocolUtils.createToken("PONB", this.poNumber, tokens);
-
-		ProtocolUtils.createToken("ERCD", this.errorCode, tokens);
-		ProtocolUtils.createToken("PRNT", this.print, tokens);
-		ProtocolUtils.createToken("MSG", this.message, tokens);
-		
-		for (String s : tokens) {
-			msg += s + "|";
-		}
-		msg = msg.substring(0, msg.length()-1);  // strip off the last | 
-		
-		// determine length of message
-		int length = msg.length() + 9;   // the 9 extra are for the 4 bytes of length, PV|, and the STX and ETX
-		String lstr = String.valueOf(length);
-		while (lstr.length() < 4) {
-			lstr = "0" + lstr;
-		}
-		
-		return (lstr + msg);
-	}
-
     
 	
 	public Long getId() {
@@ -591,7 +435,24 @@ public class PriorPostAuthorization {
 	public void setCreateTimestamp(Timestamp createTimestamp) {
 		this.createTimestamp = createTimestamp;
 	}
+
+
+
+	public String getResponseCode() {
+		return responseCode;
+	}
+
+
+
+	public void setResponseCode(String responseCode) {
+		this.responseCode = responseCode;
+	}
+
+
+
 	
+
+
 	
 
 }

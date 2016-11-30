@@ -1,13 +1,16 @@
-package com.bvd.paymentswitch.server;
+ package com.bvd.paymentswitch.server;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import com.bvd.paymentswitch.authorization.client.AuthorizationClient;
+
 import com.bvd.paymentswitch.jpa.service.AuthorizationService;
-import com.bvd.paymentswitch.models.KardallHostAuthorization;
-import com.bvd.paymentswitch.models.PaymentProcessor;
+import com.bvd.paymentswitch.models.FuelCode;
+import com.bvd.paymentswitch.models.PosAuthorization;
+import com.bvd.paymentswitch.processing.client.AuthorizationClient;
+import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
+import com.bvd.paymentswitch.processing.provider.ProviderFactory;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
 
@@ -33,6 +36,9 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	@Autowired
 	private AuthorizationService authService;
 	
+	@Autowired
+	private ProviderFactory providerFactory;
+	
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();
@@ -49,15 +55,32 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 			requestLogger.info(message);
 			
 			// parse the request
-			KardallHostAuthorization request = new KardallHostAuthorization(message);
-			request = authService.saveAuthorization(request);		
+			PosAuthorization request = new PosAuthorization(message);
+			authService.saveAuthorization(request);		
 
 			// find processor 
 			String bin = request.getCard1().substring(0,6);
-			PaymentProcessor p = authService.findPaymentProcessor(Integer.parseInt(bin));	
+			ProcessingProvider provider = providerFactory.getProvider(bin);
 			
-			// authorize it
-			authClient.authorize(request, p, ctx);
+			if (provider == null) {
+				sendErrorResponse(ctx, request, "Unable to process card");
+			} else {
+				// authorize it
+				String merchantCode = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
+				
+				if (merchantCode == null || merchantCode.isEmpty()) {
+					sendErrorResponse(ctx, request, "Unknown merchant");
+				} else {
+					FuelCode fc = authService.findFuelCode(request.getFuelType());
+					request.setFuelCode(fc);
+					try {
+						authClient.authorize(request, provider, merchantCode, ctx);
+					} catch (Exception e) {
+						logger.debug(e.getMessage());
+						sendErrorResponse(ctx, request, "Error processing card");
+					}
+				}
+			}
 		
 		} else {
 		
@@ -68,6 +91,17 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	 		// close the channel once the content is fully written
 	    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 		}
+	}
+	
+	
+	public void sendErrorResponse(ChannelHandlerContext ctx, PosAuthorization request, String error) {
+		PosAuthorization response = new PosAuthorization(request);
+		response.setResponseFlags(request);
+		response.setDenied(error, null);
+		
+		ctx.write(response.toString());
+ 		// close the channel once the content is fully written
+    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 	}
 
 	@Override

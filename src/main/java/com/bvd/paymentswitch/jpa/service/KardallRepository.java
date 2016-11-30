@@ -1,16 +1,17 @@
 package com.bvd.paymentswitch.jpa.service;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.data.repository.CrudRepository;
 
-import com.bvd.paymentswitch.models.KardallHostAuthorization;
+import com.bvd.paymentswitch.models.PosAuthorization;
 
-public interface KardallRepository extends CrudRepository<KardallHostAuthorization, Long> {
+public interface KardallRepository extends CrudRepository<PosAuthorization, Long> {
 	
-	List<KardallHostAuthorization> findBySiteId(String siteId);
+	List<PosAuthorization> findBySiteId(String siteId);
 	
-	List<KardallHostAuthorization> findByAuthId(String authId);
+	List<PosAuthorization> findByAuthId(String authId);
 	
-	List<KardallHostAuthorization> findByDateTime(String dateTime);
+	List<PosAuthorization> findByDateTime(Timestamp dateTime);
 }

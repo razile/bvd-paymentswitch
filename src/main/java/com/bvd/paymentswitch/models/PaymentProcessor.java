@@ -1,10 +1,15 @@
 package com.bvd.paymentswitch.models;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 
 @Entity
 public class PaymentProcessor {
@@ -17,7 +22,7 @@ public class PaymentProcessor {
 	private String name;
 	
 	@Column(nullable=false)
-	private String encoder;
+	private String providerClass;
 	
 	@Column(nullable=false)
 	private String host;
@@ -38,6 +43,12 @@ public class PaymentProcessor {
 	private String language;
 	@Column(length=16)
 	private String unitOfMeasure;
+	
+	
+	@OneToMany(fetch=FetchType.EAGER)
+	@JoinColumn(name="PAYMENTPROCESSOR_ID")
+	private List<BinPaymentProcessor> bins;
+	
 
 	public Short getId() {
 		return id;
@@ -55,13 +66,13 @@ public class PaymentProcessor {
 		this.name = name;
 	}
 
-	
-	public String getEncoder() {
-		return encoder;
+
+	public String getProviderClass() {
+		return providerClass;
 	}
 
-	public void setEncoder(String encoder) {
-		this.encoder = encoder;
+	public void setProviderClass(String providerClass) {
+		this.providerClass = providerClass;
 	}
 
 	public String getHost() {
@@ -120,5 +131,17 @@ public class PaymentProcessor {
 	public void setSoftwareSystem(String softwareSystem) {
 		this.softwareSystem = softwareSystem;
 	}
+
+	public List<BinPaymentProcessor> getBins() {
+		return bins;
+	}
+
+	public void setBins(List<BinPaymentProcessor> bins) {
+		this.bins = bins;
+	}
+	
+	
+
+	
 
 }

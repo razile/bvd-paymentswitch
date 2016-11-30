@@ -1,10 +1,8 @@
 package com.bvd.paymentswitch.protocol;
 
 import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 

@@ -17,7 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 @Entity
-public class KardallHostAuthorization {
+public class PosAuthorization {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -58,11 +58,20 @@ public class KardallHostAuthorization {
 	@Column(length=32)
 	private String card2;
 	
+	@Column(length=16)
+	private String cdlNumber;
+	
 	@Column(length=8)
 	private String cardType;
 	
 	@Column(length=16)
-	private String document;
+	private String documentNumber;
+	
+	@Column(precision=11,scale=3)
+	private BigDecimal priceDiscount;
+	
+	@Column(length=16)
+	private String driverId;
 	
 	@Column(length=32)
 	private String emailTrigger;
@@ -83,10 +92,10 @@ public class KardallHostAuthorization {
 	private String misc;
 	
 	@Column(length=16)
-	private String unit;
+	private String unitNumber;
 	
 	@Column(length=16)
-	private String truck;
+	private String truckNumber;
 	
 	@Column(length=16)
 	private String dipReading;
@@ -95,19 +104,19 @@ public class KardallHostAuthorization {
 	private String temperature;
 	
 	@Column(length=16)
-	private String po;
+	private String poNumber;
 	
 	@Column(length=4)
-	private String compartment;
+	private String compartmentNumber;
 	
 	@Column(length=16)
-	private String flight;
+	private String flightNumber;
 	
 	@Column(length=16)
-	private String registration;
+	private String registrationNumber;
 	
 	@Column(length=16)
-	private String tail;
+	private String tailNumber;
 	
 	@Column(length=256)
 	private String message;
@@ -131,7 +140,7 @@ public class KardallHostAuthorization {
 	private String quantityGross;
 	
 	@Column(length=4)
-	private String pump;
+	private String pumpNumber;
 	
 	@Column(precision=11,scale=3)
 	private BigDecimal sellingPrice;
@@ -162,19 +171,23 @@ public class KardallHostAuthorization {
 	
 	@Column(length=16)
 	private String tripNumber;
+	
+	@Column(length=64)
+	private String track2Data;
+	
 	private Timestamp createTimestamp;
 	
 	@Transient
-	private List<String> prompts;
+	private Map<String,String> prompts;
 	
 	@Transient
-	private Map<String,String> customPrompts;
+	private FuelCode fuelCode;
 
-	public KardallHostAuthorization() {
+	public PosAuthorization() {
 		super();
 	}
 	
-	public KardallHostAuthorization(KardallHostAuthorization request) {
+	public PosAuthorization(PosAuthorization request) {
 		this.id = request.id;
 		this.procotolId = request.getProcotolId();
 		this.siteId = request.siteId;
@@ -182,11 +195,18 @@ public class KardallHostAuthorization {
 		this.authId = request.authId;
 		this.trnNo = request.trnNo;
 		this.reqId = request.reqId;
+		
+		//this.transactionType = request.getTransactionType();
+		//this.source = source;
+		//this.hasStandardPrompts = 0;
+		//this.hasCustomPrompts = 0;
+		//this.pinFlag = request.pinFlag;
+		//this.trainingExclusionTimes = request.trainingExclusionTimes;
 	}
 
-	public KardallHostAuthorization(String request) {
+	public PosAuthorization(String request) {
 		// message starts with a 68 byte header
-		String header = request.substring(0, 68);
+		String header = request.substring(0, 72);
 
 		/*
 		 * Parse fields from header as per spec Field Length ProtocolID 11 an
@@ -198,16 +218,10 @@ public class KardallHostAuthorization {
 
 		// String reqBitMap1 =
 		// Integer.toBinaryString(Character.valueOf(header.charAt(11)));
-		String reqBitMap1 = Integer.toBinaryString(ProtocolUtils.getCodePoint(header.charAt(11)));
-		while (reqBitMap1.length() < 8) {
-			reqBitMap1 = "0" + reqBitMap1;
-		}
+		String reqBitMap1 = ProtocolUtils.getBinary(header.substring(11,14));  // Integer.toBinaryString(ProtocolUtils.getCodePoint(header.charAt(11)));
 
-		String reqBitMap2 = Integer.toBinaryString(ProtocolUtils.getCodePoint(header.charAt(12)));
-		while (reqBitMap2.length() < 8) {
-			reqBitMap2 = "0" + reqBitMap2;
-		}
-
+		String reqBitMap2 = ProtocolUtils.getBinary(header.substring(14,17)); //Integer.toBinaryString(ProtocolUtils.getCodePoint(header.charAt(12)));
+	
 		this.source = Integer.valueOf(String.valueOf(reqBitMap1.charAt(7)));
 		this.authorization = Integer.valueOf(String.valueOf(reqBitMap1.charAt(6)));
 		this.pinFlag = Integer.valueOf(String.valueOf(reqBitMap1.charAt(5)));
@@ -218,15 +232,15 @@ public class KardallHostAuthorization {
 		this.transactionType = Integer.valueOf(String.valueOf(reqBitMap2.charAt(7)));
 		this.trainingExclusionTimes = Integer.valueOf(String.valueOf(reqBitMap2.charAt(6)));
 
-		this.siteId = header.substring(13, 25);
-		this.dateTime = ProtocolUtils.stringToTimestamp(header.substring(25, 39));
-		this.authId = header.substring(39, 51);
-		this.trnNo = header.substring(51, 56);
-		this.reqId = header.substring(56, 68);
+		this.siteId = header.substring(17, 29);
+		this.dateTime = ProtocolUtils.stringToTimestamp(header.substring(29, 43));
+		this.authId = header.substring(43, 55);
+		this.trnNo = header.substring(55, 60);
+		this.reqId = header.substring(60, 72);
 
 		// now get the xml-ish fields, which start at position 68 and end before
 		// the check digit
-		String xml = request.substring(68, request.length() - 1);
+		String xml = request.substring(72, request.length() - 1);
 		String[] elements = xml.split("<|/>");
 
 		// build a map of element names (keys) and values... we'll use this to
@@ -244,29 +258,29 @@ public class KardallHostAuthorization {
 		this.card2 = xmlFields.get("C2");
 		this.cardType = xmlFields.get("CT");
 		this.pin = xmlFields.get("N1");
-		this.document = xmlFields.get("D1");
+		this.documentNumber = xmlFields.get("D1");
 		this.emailTrigger = xmlFields.get("EM");
 		this.fuelType = xmlFields.get("F1");
 		this.hoseNumber = xmlFields.get("H1");
 		this.driversLicense = xmlFields.get("L1");
 		this.propaneLicense = xmlFields.get("L2");
 		this.misc = xmlFields.get("M1");
-		this.unit = xmlFields.get("M2");
-		this.truck = xmlFields.get("M3");
+		this.unitNumber = xmlFields.get("M2");
+		this.truckNumber = xmlFields.get("M3");
 		this.dipReading = xmlFields.get("M4");
 		this.temperature = xmlFields.get("M5");
-		this.po = xmlFields.get("M6");
-		this.compartment = xmlFields.get("M7");
-		this.flight = xmlFields.get("M8");
-		this.registration = xmlFields.get("M9");
-		this.tail = xmlFields.get("M0");
+		this.poNumber = xmlFields.get("M6");
+		this.compartmentNumber = xmlFields.get("M7");
+		this.flightNumber = xmlFields.get("M8");
+		this.registrationNumber = xmlFields.get("M9");
+		this.tailNumber = xmlFields.get("M0");
 		this.message = xmlFields.get("MG");
 		this.dollarLimit = ProtocolUtils.getBigDecimal(xmlFields.get("LD"),2);
 		this.volumeLimit = ProtocolUtils.getBigDecimal(xmlFields.get("LV"),3);
 		this.odometer = xmlFields.get("O1");
 		this.quantityNet = ProtocolUtils.getBigDecimal(xmlFields.get("Q1"),3);
 		this.quantityGross = xmlFields.get("Q2");
-		this.pump = xmlFields.get("PN");
+		this.pumpNumber = xmlFields.get("PN");
 		this.sellingPrice =  ProtocolUtils.getBigDecimal(xmlFields.get("PR"),3);
 		this.denialReason = xmlFields.get("R1");
 		this.receiptTrailer = xmlFields.get("RT");
@@ -277,6 +291,10 @@ public class KardallHostAuthorization {
 		this.trailerNumber = xmlFields.get("TN");
 		this.hubometer = xmlFields.get("P1");
 		this.tripNumber = xmlFields.get("P2");
+		this.cdlNumber = xmlFields.get("CD");
+		this.driverId = xmlFields.get("DI");
+		this.priceDiscount = ProtocolUtils.getBigDecimal(xmlFields.get("DC"),3);
+		this.track2Data = xmlFields.get("TR");
 	}
 
 	@Override
@@ -289,7 +307,7 @@ public class KardallHostAuthorization {
 		while (auth.length() < 12) {
 			auth += " ";
 		}
-		String msg = this.procotolId + ProtocolUtils.getCharacter(reqbmp1) + ProtocolUtils.getCharacter(reqbmp2) + this.siteId + ProtocolUtils.timestampToString(dateTime) + auth + this.trnNo + this.reqId;
+		String msg = this.procotolId + ProtocolUtils.encodeInteger(ProtocolUtils.getInteger(reqbmp1)) + ProtocolUtils.encodeInteger(ProtocolUtils.getInteger(reqbmp2)) + this.siteId + ProtocolUtils.timestampToString(dateTime) + auth + this.trnNo + this.reqId;
 		
 		List<String> fields = new ArrayList<String>();
 		
@@ -297,6 +315,7 @@ public class KardallHostAuthorization {
 		ProtocolUtils.createXmlField("C1", this.card1, fields);
 		ProtocolUtils.createXmlField("C2", this.card2, fields);
 		ProtocolUtils.createXmlField("CT", this.cardType, fields);
+		ProtocolUtils.createXmlField("TR", this.track2Data, fields);
 		ProtocolUtils.createXmlField("N1", this.pin, fields);
 		ProtocolUtils.createXmlField("EM", this.emailTrigger, fields);
 		ProtocolUtils.createXmlField("F1", this.fuelType, fields);
@@ -306,39 +325,35 @@ public class KardallHostAuthorization {
 		ProtocolUtils.createXmlField("M1", this.misc , fields);
 		ProtocolUtils.createXmlField("M4", this.dipReading, fields);
 		ProtocolUtils.createXmlField("M5", this.temperature, fields);
-		ProtocolUtils.createXmlField("M7", this.compartment, fields);
-		ProtocolUtils.createXmlField("M8", this.flight, fields);
-		ProtocolUtils.createXmlField("M9", this.registration, fields);
-		ProtocolUtils.createXmlField("M0", this.tail, fields);
+		ProtocolUtils.createXmlField("M7", this.compartmentNumber, fields);
+		ProtocolUtils.createXmlField("M8", this.flightNumber, fields);
+		ProtocolUtils.createXmlField("M9", this.registrationNumber, fields);
+		ProtocolUtils.createXmlField("M0", this.tailNumber, fields);
+		ProtocolUtils.createXmlField("D1", this.documentNumber, fields);
+		if (priceDiscount != null) ProtocolUtils.createXmlField("DC", priceDiscount.toPlainString(), fields);
 		 
 		if (prompts == null) {
-			ProtocolUtils.createXmlField("D1", this.document, fields);
 			ProtocolUtils.createXmlField("L1", this.driversLicense, fields);
-			ProtocolUtils.createXmlField("M2", this.unit, fields);
-			ProtocolUtils.createXmlField("M3", this.truck, fields);
-			ProtocolUtils.createXmlField("M6", this.po, fields);
+			ProtocolUtils.createXmlField("M2", this.unitNumber, fields);
+			ProtocolUtils.createXmlField("M3", this.truckNumber, fields);
+			ProtocolUtils.createXmlField("M6", this.poNumber, fields);
 			ProtocolUtils.createXmlField("TN", this.trailerNumber, fields);
 			ProtocolUtils.createXmlField("O1", this.odometer, fields);
+			ProtocolUtils.createXmlField("P1", this.hubometer, fields);
+			ProtocolUtils.createXmlField("P2", this.tripNumber, fields);
+			ProtocolUtils.createXmlField("DI", this.driverId, fields);
+			ProtocolUtils.createXmlField("CD", this.cdlNumber, fields);
 		}  else {
-			for (String s: prompts) {
-				ProtocolUtils.createXmlField(s,"",fields);
+			for (String s: prompts.keySet()) {
+				ProtocolUtils.createXmlField(s,prompts.get(s),fields);
 			}
-		}
-		
-		if (customPrompts  != null) {
-			for (String s: customPrompts.keySet()) {
-				ProtocolUtils.createXmlField(s, customPrompts.get(s), fields);
-			}
-		} else {
-			ProtocolUtils.createToken("P1",this.hubometer, fields);
-			ProtocolUtils.createToken("P2",this.tripNumber, fields);
 		}
 		
 		if (dollarLimit != null) ProtocolUtils.createXmlField("LD", dollarLimit.toPlainString(), fields);
 		if (volumeLimit != null) ProtocolUtils.createXmlField("LV", volumeLimit.toPlainString(), fields);
 		if (quantityNet != null) ProtocolUtils.createXmlField("Q1", quantityNet.toPlainString(), fields);
 		ProtocolUtils.createXmlField("Q2", this.quantityGross, fields);
-		ProtocolUtils.createXmlField("PN", this.pump, fields);
+		ProtocolUtils.createXmlField("PN", this.pumpNumber, fields);
 		if (sellingPrice != null) ProtocolUtils.createXmlField("PR", sellingPrice.toPlainString(), fields);
 		ProtocolUtils.createXmlField("R1", this.denialReason, fields);
 		ProtocolUtils.createXmlField("RT", this.receiptTrailer, fields);
@@ -351,28 +366,49 @@ public class KardallHostAuthorization {
 			msg += s;
 		}
 		
-		msg = msg + ProtocolUtils.getCharacter(ProtocolUtils.calculateCheckDigit(msg));
+		msg = msg + ProtocolUtils.encodeInteger(ProtocolUtils.calculateCheckDigit(msg));
 		return msg;
 	}
 	
-	public void addPrompt(String prompt) {
+	public void addPrompt(String prompt, String value) {
+		
+		if (value == null) return;
 		
 		if (prompts == null) { 
-			prompts = new ArrayList<String>();
+			prompts = new HashMap<String,String>();
 			this.setHasStandardPrompts(1);
 		}
-		prompts.add(prompt);
-	}
-	
-	public void addCustomPrompt(String key, String value) {
-		if (customPrompts == null) {
-			customPrompts = new HashMap<String,String>();
-			this.setHasCustomPrompts(1);
-		}
-		customPrompts.put(key, value);
+		prompts.put(prompt, value);
 	}
 	
 	
+	public void setResponseFlags(PosAuthorization request) {
+		setSource(1);
+    	setHasStandardPrompts(0);
+    	setHasCustomPrompts(0);
+    	if (request != null) {
+    		setPinFlag(request.getPinFlag());
+    		setTransactionType(request.getTransactionType());
+        	setTrainingExclusionTimes(request.getTrainingExclusionTimes());
+    	} else {
+    		setPinFlag(0);
+    		setTransactionType(0);
+        	setTrainingExclusionTimes(0);
+    	}
+	}
+	
+	public void setAuthorized(String authCode) {
+		setAuthorization(1);
+		setReAuthorizationFlag(0);
+		setAuthId(authCode);
+	}
+	
+	public void setDenied(String denialReason, String message) {
+		setAuthorization(0);
+		setReAuthorizationFlag(1);
+		setDenialReason(denialReason);
+		setMessage(message);
+	}
 	
 	
 	public Long getId() {
@@ -535,12 +571,12 @@ public class KardallHostAuthorization {
 		this.cardType = cardType;
 	}
 
-	public String getDocument() {
-		return document;
+	public String getDocumentNumber() {
+		return documentNumber;
 	}
 
-	public void setDocument(String document) {
-		this.document = document;
+	public void setDocumentNumber(String document) {
+		this.documentNumber = document;
 	}
 
 	public String getEmailTrigger() {
@@ -591,20 +627,20 @@ public class KardallHostAuthorization {
 		this.misc = misc;
 	}
 
-	public String getUnit() {
-		return unit;
+	public String getUnitNumber() {
+		return unitNumber;
 	}
 
-	public void setUnit(String unit) {
-		this.unit = unit;
+	public void setUnitNumber(String unit) {
+		this.unitNumber = unit;
 	}
 
-	public String getTruck() {
-		return truck;
+	public String getTruckNumber() {
+		return truckNumber;
 	}
 
-	public void setTruck(String truck) {
-		this.truck = truck;
+	public void setTruckNumber(String truck) {
+		this.truckNumber = truck;
 	}
 
 	public String getDipReading() {
@@ -623,44 +659,44 @@ public class KardallHostAuthorization {
 		this.temperature = temperature;
 	}
 
-	public String getPo() {
-		return po;
+	public String getPoNumber() {
+		return poNumber;
 	}
 
-	public void setPo(String po) {
-		this.po = po;
+	public void setPoNumber(String poNumber) {
+		this.poNumber = poNumber;
 	}
 
-	public String getCompartment() {
-		return compartment;
+	public String getCompartmentNumber() {
+		return compartmentNumber;
 	}
 
-	public void setCompartment(String compartment) {
-		this.compartment = compartment;
+	public void setCompartmentNumber(String compartment) {
+		this.compartmentNumber = compartment;
 	}
 
-	public String getFlight() {
-		return flight;
+	public String getFlightNumber() {
+		return flightNumber;
 	}
 
-	public void setFlight(String flight) {
-		this.flight = flight;
+	public void setFlightNumber(String flight) {
+		this.flightNumber = flight;
 	}
 
-	public String getRegistration() {
-		return registration;
+	public String getRegistrationNumber() {
+		return registrationNumber;
 	}
 
-	public void setRegistration(String registration) {
-		this.registration = registration;
+	public void setRegistrationNumber(String registration) {
+		this.registrationNumber = registration;
 	}
 
-	public String getTail() {
-		return tail;
+	public String getTailNumber() {
+		return tailNumber;
 	}
 
-	public void setTail(String tail) {
-		this.tail = tail;
+	public void setTailNumber(String tail) {
+		this.tailNumber = tail;
 	}
 
 	public String getMessage() {
@@ -719,12 +755,12 @@ public class KardallHostAuthorization {
 		this.quantityGross = quantityGross;
 	}
 
-	public String getPump() {
-		return pump;
+	public String getPumpNumber() {
+		return pumpNumber;
 	}
 
 	public void setPump(String pump) {
-		this.pump = pump;
+		this.pumpNumber = pump;
 	}
 
 	public BigDecimal getSellingPrice() {
@@ -818,6 +854,53 @@ public class KardallHostAuthorization {
 	public void setCreateTimestamp(Timestamp createTimestamp) {
 		this.createTimestamp = createTimestamp;
 	}
-	
 
+	public String getCdlNumber() {
+		return cdlNumber;
+	}
+
+	public void setCdlNumber(String cdlNumber) {
+		this.cdlNumber = cdlNumber;
+	}
+
+	public BigDecimal getPriceDiscount() {
+		return priceDiscount;
+	}
+
+	public void setPriceDiscount(BigDecimal priceDiscount) {
+		this.priceDiscount = priceDiscount;
+	}
+
+	public String getDriverId() {
+		return driverId;
+	}
+
+	public void setDriverId(String driverId) {
+		this.driverId = driverId;
+	}
+
+	public String getTrack2Data() {
+		return track2Data;
+	}
+
+	public void setTrack2Data(String track2Data) {
+		this.track2Data = track2Data;
+	}
+
+	public void setPumpNumber(String pumpNumber) {
+		this.pumpNumber = pumpNumber;
+	}
+
+	public FuelCode getFuelCode() {
+		return fuelCode;
+	}
+
+	public void setFuelCode(FuelCode fuelCode) {
+		this.fuelCode = fuelCode;
+	}
+	
+	
+	
+	
+	
 }
