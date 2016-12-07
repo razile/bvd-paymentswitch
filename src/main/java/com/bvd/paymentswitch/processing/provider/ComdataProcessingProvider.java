@@ -65,7 +65,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		
 		String report = processorRequest.getType();
 		
-		char fs = ASCIIChars.ASC28;
+		char fs = ASCIIChars.ASC47;
 		if (report.equalsIgnoreCase("SP00014")) {
 			fs = ASCIIChars.ASC47;
 		}
