@@ -69,8 +69,8 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (report.equalsIgnoreCase("SP00014")) {
 			fs = ASCIIChars.ASC47;
 		}
-		String msg = processorRequest.getLocation() + " " + paymentProcessor.getSoftwareSystem() + report 
-				+ fs + "00036" + fs + "A" + processorRequest.getCardNumber() + fs + processorRequest.getUnitNumber();
+		String msg = processorRequest.getLocation() + "T" + paymentProcessor.getSoftwareSystem() + report 
+				+ fs + "00036" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber();
 		
 		return msg;
 	}

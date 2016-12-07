@@ -132,8 +132,11 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 			// this is a prior
 			processorRequest.setType("IC");
 			processorRequest.setCustomerInformation("I");
-			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +",1,1";
-			//processorRequest.setFuel(fuelToken);
+			
+			if (sellingPrice != null) {
+				String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +",1,1";
+				processorRequest.setFuel(fuelToken);
+			}
 		} else {
 			// this is a post (completed transaction)
 			processorRequest.setType("AC");
