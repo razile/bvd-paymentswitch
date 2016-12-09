@@ -39,7 +39,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	public ProcessorAuthorization parseProcessorResponse(String response) {
 		ProcessorAuthorization processorResponse = new ProcessorAuthorization();
 		String header = response.substring(0,17);
-		String body = response.substring(17);
+		String body = response.substring(18);
 		
 		processorResponse.setLocation(header.substring(0,5));
 		processorResponse.setVersionNumber(header.substring(5,6));
@@ -48,16 +48,57 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		String report = header.substring(10,17);
 		processorResponse.setType(report);
 		
-		String[] fields = null;
-		if (report.equalsIgnoreCase("SP00014")) {
-			fields = body.split(String.valueOf(ASCIIChars.ASC47));
+		if (report.equalsIgnoreCase("SP00007")) {
+			parseSP7(processorResponse, body);
+		} else if (report.equalsIgnoreCase("SP00011")) {
+			parseSP11(processorResponse, body);
 		} else {
-			fields = body.split(String.valueOf(ASCIIChars.ASC28));
+			parseSP14(processorResponse, body);
 		}
 		
-		processorResponse.setResponseCode(fields[0]);
-		processorResponse.setMessage(fields[1]);
-		return null;
+		return processorResponse;
+	}
+
+	private void parseSP14(ProcessorAuthorization processorResponse, String body) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void parseSP11(ProcessorAuthorization processorResponse, String body) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void parseSP7(ProcessorAuthorization processorResponse, String body) {
+		
+		String[] fields = body.split(String.valueOf(ASCIIChars.ASC47));
+		String responseCode = fields[0];
+		processorResponse.setResponseCode(responseCode);
+		
+		String reply = fields[1];
+		
+		if (responseCode.equals("00000")) {
+			// good response
+			processorResponse.setDriverID(reply.substring(0, 17));
+			processorResponse.setTrailerNumber(reply.substring(17,28));
+			processorResponse.setHubReading(reply.substring(28,41));
+			//String trailerHub = reply.substring(41,42);
+			//String trailerHours = reply.substring(42,43);
+			
+			processorResponse.setTrip(reply.substring(43,56));
+			processorResponse.setDriversLicenseNumber(reply.substring(56,77));
+			//String dlState = reply.substring(77,79);
+			processorResponse.setPoNumber(reply.substring(79,90));
+			
+			//String lastName = reply.substring(90,110);
+			//String firstName = reply.substring(110,125);
+			
+		} else {
+			// failed response
+			processorResponse.setMessage(reply);
+			processorResponse.setErrorCode(responseCode);
+		}
+		
 	}
 
 	@Override
@@ -66,9 +107,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		String report = processorRequest.getType();
 		
 		char fs = ASCIIChars.ASC47;
-		if (report.equalsIgnoreCase("SP00014")) {
-			fs = ASCIIChars.ASC47;
-		}
+	
 		String msg = processorRequest.getLocation() + "T" + paymentProcessor.getSoftwareSystem() + report 
 				+ fs + "00036" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber();
 		

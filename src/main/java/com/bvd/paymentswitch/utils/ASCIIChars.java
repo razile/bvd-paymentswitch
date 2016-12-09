@@ -13,7 +13,7 @@ public class ASCIIChars {
 	public final static char ETX = '\u0003';
 	public final static char STX = '\u0002';
 	public static  char ASC123 = '\u007B';
-	public static  char ASC125 = '\u007C';
+	public static  char ASC125 = '\u007D';
 	public static char ASC28= '\u001C';
 	public static char ASC47 = '\u002F';
 	
