@@ -8,10 +8,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 
 @Entity
+@Table(name="processor_authorization",
+		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type", unique=true)})
 public class ProcessorAuthorization {
 
 	@Id
@@ -19,7 +23,7 @@ public class ProcessorAuthorization {
 	private Long id;
 	// required fields - header
 	
-	@Column(length=7)
+	@Column(name="type", length=7)
 	private String type;				// Character (2)	Request: IC (pre), AC (post)  VC (void), Response: PC (pre-approved), RC (post/void-approved), XC or EC (declined)
 										// Comdata: SP00007, 00014, 00011
 	@Column(length=16)
@@ -52,13 +56,13 @@ public class ProcessorAuthorization {
 	private String registerIndicator;	// Character (1)	FROM:C or R							
 	
 	// body fields 
-	@Column(length=10)
+	@Column(name="invoice_number",length=10)
 	private String invoiceNumber;		// Character (10)	INVN:	
 	
 	@Column(length=32)
 	private String cardToken;			// Character (20)	CDSW:	only send one of CARD/CDSW
 	
-	@Column(length=32)
+	@Column(name="card_number",length=32)
 	private String cardNumber;			// Character		CARD:   card number and how entered (S=swiped)  |CARD:1234567890,S|
 	
 	// Optional Extended Fields Prompts
@@ -68,7 +72,7 @@ public class ProcessorAuthorization {
 	@Column(length=32)
 	private String trailerNumber;		// Character (12)	TRLR:
 	
-	@Column(length=32)
+	@Column(name="unit_number",length=32)
 	private String unitNumber;			// Character (12)	UNIT:
 	
 	@Column(length=32)
@@ -119,6 +123,9 @@ public class ProcessorAuthorization {
 	private String responseCode;
 	
 	private Timestamp createTimestamp;
+	
+	@Transient
+	private FuelCode fuelCode;
 
 	
 	public ProcessorAuthorization() {
@@ -450,6 +457,18 @@ public class ProcessorAuthorization {
 
 
 
+	public FuelCode getFuelCode() {
+		return fuelCode;
+	}
+
+
+
+	public void setFuelCode(FuelCode fuelCode) {
+		this.fuelCode = fuelCode;
+	}
+
+
+	
 	
 
 

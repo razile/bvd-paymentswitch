@@ -34,4 +34,6 @@ public interface AuthorizationService {
 	FuelCode findComdataFuelCode(String code);
 	
 	void saveFuelCodes(List<FuelCode> codes);
+	
+	ProcessorAuthorization findProcessorAuthorization(String type, String invoiceNumber, String cardNumber, String responseCode);
 }

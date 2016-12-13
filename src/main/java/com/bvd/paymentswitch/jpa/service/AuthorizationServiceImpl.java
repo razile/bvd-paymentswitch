@@ -30,14 +30,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	static final Logger requestLogger = LoggerFactory.getLogger("Request-Persistence-Logger");
 	static final Logger responseLogger = LoggerFactory.getLogger("Response-Persistence-Logger");
 	
-	private final KardallRepository kardallRepository;
-	private final PriorPostRepository processorRepository;
+	private final POSAuthorizationRepository kardallRepository;
+	private final ProcessorAuthorizationRepository processorRepository;
 	private final BinPaymentProcessorRepository binRepository;
 	private final PaymentProcessorRepository paymentProcessorRepository;
 	private final MerchantCodeRepository merchantCodeRepository;
 	private final FuelCodeRepository fuelCodeRepository;
 	
-	public AuthorizationServiceImpl(KardallRepository kardallRepository, PriorPostRepository processorRepository,
+	public AuthorizationServiceImpl(POSAuthorizationRepository kardallRepository, ProcessorAuthorizationRepository processorRepository,
 									BinPaymentProcessorRepository binRepository,PaymentProcessorRepository paymentProcessorRepository,
 									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository) {
 		this.kardallRepository = kardallRepository;
@@ -154,5 +154,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	public Iterable<PaymentProcessor> getAllPaymentProcessors() {
 		return paymentProcessorRepository.findAll();
 	}
+
+
+	@Override
+	public ProcessorAuthorization findProcessorAuthorization(String type, String invoiceNumber, String cardNumber, String responseCode) {
+		return processorRepository.findByTypeAndInvoiceNumberAndCardNumberAndResponseCode(type, invoiceNumber, cardNumber, responseCode);
+	}
+	
+	
 
 }

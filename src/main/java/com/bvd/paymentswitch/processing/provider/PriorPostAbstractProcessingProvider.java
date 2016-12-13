@@ -38,11 +38,12 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 	}
 
 	@Override
-	public ProcessorAuthorization parseProcessorResponse(String response) {
+	public ProcessorAuthorization parseProcessorResponse(PosAuthorization posRequest, String response) {
 		ProcessorAuthorization processorResponse = new ProcessorAuthorization();
 		String[] fields = response.split("\\|");
 		
 		processorResponse.setType(fields[1]);
+		processorResponse.setResponseCode(fields[1]);
 		processorResponse.setLocation(fields[2]);
 		processorResponse.setVersionNumber(fields[3]);
 		processorResponse.setCount(Integer.parseInt(fields[4]));

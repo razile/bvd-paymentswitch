@@ -57,7 +57,7 @@ public abstract class AuthorizationHandler extends SimpleChannelInboundHandler<S
     	logger.debug("READ: " + msg);
     	
     	responseLogger.info(msg);
-    	ProcessorAuthorization processorResponse = processingProvider.parseProcessorResponse(msg); 	
+    	ProcessorAuthorization processorResponse = processingProvider.parseProcessorResponse(posRequest, msg); 	
     	
     	processingProvider.saveProcessorResponse(processorResponse);
     	
@@ -68,18 +68,6 @@ public abstract class AuthorizationHandler extends SimpleChannelInboundHandler<S
     	}
     }
 
-
-	public void setPosPrompts(ProcessorAuthorization processorResponse, PosAuthorization posResponse) {
-		posResponse.addPrompt("L1", formatPosPrompt(processorResponse.getDriversLicenseNumber()));
-		posResponse.addPrompt("M2", formatPosPrompt(processorResponse.getUnitNumber()));
-		posResponse.addPrompt("M3", formatPosPrompt(processorResponse.getVehiclePlateNumber()));
-		posResponse.addPrompt("M6", formatPosPrompt(processorResponse.getPoNumber()));
-		posResponse.addPrompt("TN", formatPosPrompt(processorResponse.getTrailerNumber()));
-		posResponse.addPrompt("O1", formatPosPrompt(processorResponse.getOdometerReading() ));
-		posResponse.addPrompt("P1", formatPosPrompt(processorResponse.getHubReading()));
-		posResponse.addPrompt("P2", formatPosPrompt(processorResponse.getTrip()));
-		posResponse.addPrompt("DI", formatPosPrompt(processorResponse.getDriverID()));
-	}
     
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

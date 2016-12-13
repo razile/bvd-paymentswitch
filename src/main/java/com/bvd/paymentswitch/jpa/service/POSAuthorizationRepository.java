@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
 
-public interface KardallRepository extends CrudRepository<PosAuthorization, Long> {
+public interface POSAuthorizationRepository extends CrudRepository<PosAuthorization, Long> {
 	
 	List<PosAuthorization> findBySiteId(String siteId);
 	

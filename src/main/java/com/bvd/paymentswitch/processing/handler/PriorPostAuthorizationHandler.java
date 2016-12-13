@@ -70,12 +70,14 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
 			} else {
 				posResponse.setDollarLimit(processorResponse.getTotal());
 			}
+			posResponse.setMessage(processorResponse.getMessage());
 			setPosPrompts(processorResponse, posResponse);
 			
     	} else if (type.equals("RC")) {
 			// this is a post-auth approval
     		posResponse.setAuthorized(processorResponse.getAuthorizationCode());	
     		posResponse.setAmount(processorResponse.getTotal());
+    		posResponse.setMessage(processorResponse.getMessage());
 			
 		} else {
 			// this is a denial or extended prompts (XC)
@@ -92,7 +94,7 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
     		posResponse.setReceiptTrailerFlag(0);
     	}
     	
-    	posResponse.setMessage(processorResponse.getMessage());
+    	
     	String bvdResp = posResponse.toString();
     	logger.debug("SEND: " + bvdResp);
     	posCtx.write(bvdResp);
@@ -102,6 +104,19 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
     	
 	}
 
+
+	
+	public void setPosPrompts(ProcessorAuthorization processorResponse, PosAuthorization posResponse) {
+		posResponse.addPrompt("L1", formatPosPrompt(processorResponse.getDriversLicenseNumber()));
+		posResponse.addPrompt("M2", formatPosPrompt(processorResponse.getUnitNumber()));
+		posResponse.addPrompt("M3", formatPosPrompt(processorResponse.getVehiclePlateNumber()));
+		posResponse.addPrompt("M6", formatPosPrompt(processorResponse.getPoNumber()));
+		posResponse.addPrompt("TN", formatPosPrompt(processorResponse.getTrailerNumber()));
+		posResponse.addPrompt("O1", formatPosPrompt(processorResponse.getOdometerReading() ));
+		posResponse.addPrompt("P1", formatPosPrompt(processorResponse.getHubReading()));
+		posResponse.addPrompt("P2", formatPosPrompt(processorResponse.getTrip()));
+		posResponse.addPrompt("DI", formatPosPrompt(processorResponse.getDriverID()));
+	}
 
 	@Override
 	public String formatPosPrompt(String processorValue) {

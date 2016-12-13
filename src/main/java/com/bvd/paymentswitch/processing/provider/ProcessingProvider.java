@@ -28,7 +28,7 @@ public interface ProcessingProvider {
 	
 	AuthorizationHandler getAuthorizationHandler(PosAuthorization posRequest, ChannelHandlerContext posCtx);
 	
-	ProcessorAuthorization parseProcessorResponse(String processorResponse);
+	ProcessorAuthorization parseProcessorResponse(PosAuthorization posRequest, String processorResponse);
 	
 	String formatProcessorRequest(ProcessorAuthorization processorRequest);
 	

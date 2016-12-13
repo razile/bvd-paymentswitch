@@ -195,6 +195,7 @@ public class PosAuthorization {
 		this.authId = request.authId;
 		this.trnNo = request.trnNo;
 		this.reqId = request.reqId;
+		this.fuelCode = request.getFuelCode();
 		
 		//this.transactionType = request.getTransactionType();
 		//this.source = source;
@@ -407,6 +408,12 @@ public class PosAuthorization {
 		setAuthorization(0);
 		setReAuthorizationFlag(1);
 		setDenialReason(denialReason);
+		setMessage(message);
+	}
+	
+	public void setReauthForComdata(String message) {
+		setAuthorization(0);
+		setReAuthorizationFlag(1);
 		setMessage(message);
 	}
 	

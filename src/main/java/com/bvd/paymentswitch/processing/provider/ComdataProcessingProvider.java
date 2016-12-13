@@ -9,6 +9,7 @@ import com.bvd.paymentswitch.processing.handler.ComdataAuthorizationHandler;
 import com.bvd.paymentswitch.protocol.ComdataDecoder;
 import com.bvd.paymentswitch.protocol.ComdataEncoder;
 import com.bvd.paymentswitch.utils.ASCIIChars;
+import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -36,8 +37,13 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	}
 
 	@Override
-	public ProcessorAuthorization parseProcessorResponse(String response) {
+	public ProcessorAuthorization parseProcessorResponse(PosAuthorization posRequest, String response) {
 		ProcessorAuthorization processorResponse = new ProcessorAuthorization();
+		processorResponse.setCardNumber(posRequest.getCard1());
+		processorResponse.setCardToken(posRequest.getTrack2Data());
+		processorResponse.setUnitNumber(posRequest.getUnitNumber());
+		processorResponse.setInvoiceNumber(posRequest.getTrnNo());
+		
 		String header = response.substring(0,17);
 		String body = response.substring(18);
 		
@@ -48,19 +54,34 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		String report = header.substring(10,17);
 		processorResponse.setType(report);
 		
+		String[] fields = body.split(String.valueOf(ASCIIChars.ASC47));
+		String responseCode = fields[0];
+		processorResponse.setResponseCode(responseCode);
+		
+		String reply = fields[1];
+		
 		if (report.equalsIgnoreCase("SP00007")) {
-			parseSP7(processorResponse, body);
-		} else if (report.equalsIgnoreCase("SP00011")) {
-			parseSP11(processorResponse, body);
+			parseSP7(processorResponse, reply);
+		} else if (report.equalsIgnoreCase("SP00014")) {
+			parseSP14(processorResponse, reply);
 		} else {
-			parseSP14(processorResponse, body);
+			parseSP11(processorResponse, reply);
 		}
 		
 		return processorResponse;
 	}
 
-	private void parseSP14(ProcessorAuthorization processorResponse, String body) {
-		// TODO Auto-generated method stub
+	private void parseSP14(ProcessorAuthorization processorResponse, String reply) {
+		if (processorResponse.getResponseCode().equals("00000")) {
+			// good response
+			processorResponse.setTotal(ProtocolUtils.getBigDecimal(reply.substring(0,7).trim(), 2));
+			
+		} else {
+			// failed response
+			processorResponse.setMessage("SP00014 Error");
+			processorResponse.setErrorCode(processorResponse.getResponseCode());
+		}
+		
 		
 	}
 
@@ -69,26 +90,23 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		
 	}
 
-	private void parseSP7(ProcessorAuthorization processorResponse, String body) {
+	private void parseSP7(ProcessorAuthorization processorResponse, String reply) {
 		
-		String[] fields = body.split(String.valueOf(ASCIIChars.ASC47));
-		String responseCode = fields[0];
-		processorResponse.setResponseCode(responseCode);
-		
-		String reply = fields[1];
-		
-		if (responseCode.equals("00000")) {
+		if (processorResponse.getResponseCode().equals("00000")) {
 			// good response
-			processorResponse.setDriverID(reply.substring(0, 17));
-			processorResponse.setTrailerNumber(reply.substring(17,28));
-			processorResponse.setHubReading(reply.substring(28,41));
+			processorResponse.setDriverID(parsePrompt(reply.substring(0,1), reply.substring(1, 17),null,null,16));
+			processorResponse.setTrailerNumber(parsePrompt(reply.substring(17,18),reply.substring(18,28),null,null,10));
+			
+			processorResponse.setHubReading(parsePrompt(reply.substring(28,29), null, reply.substring(29,35),reply.substring(35,41),6));
+		
+			
 			//String trailerHub = reply.substring(41,42);
 			//String trailerHours = reply.substring(42,43);
 			
-			processorResponse.setTrip(reply.substring(43,56));
-			processorResponse.setDriversLicenseNumber(reply.substring(56,77));
+			processorResponse.setTrip(parsePrompt(reply.substring(43,44),reply.substring(46,56),null,null,10));
+			processorResponse.setDriversLicenseNumber(parsePrompt(reply.substring(56,57),reply.substring(57,77),null,null,20));
 			//String dlState = reply.substring(77,79);
-			processorResponse.setPoNumber(reply.substring(79,90));
+			processorResponse.setPoNumber(parsePrompt(reply.substring(79,80),reply.substring(80,90),null,null,10));
 			
 			//String lastName = reply.substring(90,110);
 			//String firstName = reply.substring(110,125);
@@ -96,11 +114,34 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		} else {
 			// failed response
 			processorResponse.setMessage(reply);
-			processorResponse.setErrorCode(responseCode);
+			processorResponse.setErrorCode(processorResponse.getResponseCode());
 		}
 		
 	}
+	
+	
+	private String parsePrompt(String indicator, String data, String high, String low, int maxLength) {
+		if (indicator == null) return null;
+		indicator = indicator.trim();
+		
+		if (indicator.startsWith("N") || indicator.startsWith("O") || indicator.startsWith("X") || indicator.length() == 0) return null;
+		
+		if (indicator.startsWith("C")) {
+			return "L," + maxLength;
+		} else if (indicator.startsWith("V") || indicator.startsWith("E"))  {
+			return "V," + ((data != null) ? data.trim():"");
+		} else if (indicator.startsWith("R")) {
+			return "V,M"+ low + ":X" + high;
+		} else { 
+			return null;
+		}
+	}
+	
+	
+	
+	
 
+	
 	@Override
 	public String formatProcessorRequest(ProcessorAuthorization processorRequest) {
 		
@@ -108,8 +149,19 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		
 		char fs = ASCIIChars.ASC47;
 	
-		String msg = processorRequest.getLocation() + "T" + paymentProcessor.getSoftwareSystem() + report 
-				+ fs + "00036" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber();
+		String msg  = processorRequest.getLocation() + "T" + paymentProcessor.getSoftwareSystem() + report + fs;
+		
+		if (report.equalsIgnoreCase("SP00007")) {
+			msg += "00036" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber();
+		} else if (report.equalsIgnoreCase("SP00011")) {
+			msg = ""; 
+		} else {
+			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() + fs 
+					+ processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getOdometerReading()
+					+ fs + processorRequest.getHubReading() + fs + fs + processorRequest.getTrip() + fs + processorRequest.getDriversLicenseNumber() 
+					+ fs + fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuel();
+		}
+	
 		
 		return msg;
 	}
@@ -146,16 +198,25 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		processorRequest.setVehiclePlateNumber(posRequest.getTruckNumber());
 
 		BigDecimal sellingPrice = posRequest.getSellingPrice();
-		int fuelType = posRequest.getFuelCode().getEfsCode(); 
+		String fuelType = posRequest.getFuelCode().getComdataCode(); 
+		
 		// specific tokens by lifecycle
 		if (transType == 0) {
 			// this is a prior
-			processorRequest.setType("SP00007");
-			processorRequest.setCustomerInformation("I");
-			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +",1,1";
+			// check to see if there has already been an SP00007
+			
+			ProcessorAuthorization sp7 = authService.findProcessorAuthorization("SP00007", posRequest.getTrnNo(), posRequest.getCard1(), "00000");
+			
+			if (sp7 == null) {
+				processorRequest.setType("SP00007");
+			} else {
+				processorRequest.setType("SP00014");
+				processorRequest.setFuel(fuelType);
+			}
+			
 			//processorRequest.setFuel(fuelToken);
 		} else {
-			// this is a post (completed transaction)
+			// this  is a post (completed transaction)
 			processorRequest.setType("SP00011");
 			processorRequest.setAuthorizationCode(posRequest.getAuthId().trim());
 			processorRequest.setCustomerInformation("I");
