@@ -15,7 +15,7 @@ import javax.persistence.Transient;
 
 @Entity
 @Table(name="processor_authorization",
-		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type", unique=true)})
+		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type,response_code", unique=true)})
 public class ProcessorAuthorization {
 
 	@Id
@@ -119,8 +119,11 @@ public class ProcessorAuthorization {
 	@Column(length=256)
 	private String print;				// PRNT:
 	
-	@Column(length=5) 
+	@Column(name="response_code",length=5) 
 	private String responseCode;
+	
+	@Column(length=16) 
+	private String dlState;
 	
 	private Timestamp createTimestamp;
 	
@@ -468,10 +471,16 @@ public class ProcessorAuthorization {
 	}
 
 
-	
-	
+
+	public String getDlState() {
+		return dlState;
+	}
 
 
-	
+
+	public void setDlState(String dlState) {
+		this.dlState = dlState;
+	}
+
 
 }

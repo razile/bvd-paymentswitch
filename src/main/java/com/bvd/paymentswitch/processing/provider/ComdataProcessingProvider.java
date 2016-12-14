@@ -105,7 +105,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 			processorResponse.setTrip(parsePrompt(reply.substring(43,44),reply.substring(46,56),null,null,10));
 			processorResponse.setDriversLicenseNumber(parsePrompt(reply.substring(56,57),reply.substring(57,77),null,null,20));
-			//String dlState = reply.substring(77,79);
+			processorResponse.setDlState(parsePrompt(null, reply.substring(77,79), null, null, 2));
 			processorResponse.setPoNumber(parsePrompt(reply.substring(79,80),reply.substring(80,90),null,null,10));
 			
 			//String lastName = reply.substring(90,110);
@@ -120,8 +120,15 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	}
 	
 	
-	private String parsePrompt(String indicator, String data, String high, String low, int maxLength) {
-		if (indicator == null) return null;
+	private String parsePrompt(String indicator, String data, String low, String high, int maxLength) {
+		if (indicator == null) { 
+			if (data != null) {
+				data = data.trim();
+				return (data.length()>0?data:null);
+			} else {
+				return null;
+			}
+		}
 		indicator = indicator.trim();
 		
 		if (indicator.startsWith("N") || indicator.startsWith("O") || indicator.startsWith("X") || indicator.length() == 0) return null;
@@ -159,7 +166,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() + fs 
 					+ processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getOdometerReading()
 					+ fs + processorRequest.getHubReading() + fs + fs + processorRequest.getTrip() + fs + processorRequest.getDriversLicenseNumber() 
-					+ fs + fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuel();
+					+ fs + processorRequest.getDlState() + fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuel();
 		}
 	
 		
@@ -205,13 +212,14 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			// this is a prior
 			// check to see if there has already been an SP00007
 			
-			ProcessorAuthorization sp7 = authService.findProcessorAuthorization("SP00007", posRequest.getTrnNo(), posRequest.getCard1(), "00000");
+			ProcessorAuthorization sp7 = authService.findProcessorAuthorization(posRequest.getTrnNo(), posRequest.getCard1(), posRequest.getUnitNumber(), "SP00007","00000");
 			
 			if (sp7 == null) {
 				processorRequest.setType("SP00007");
 			} else {
 				processorRequest.setType("SP00014");
 				processorRequest.setFuel(fuelType);
+				processorRequest.setDlState(sp7.getDlState());
 			}
 			
 			//processorRequest.setFuel(fuelToken);

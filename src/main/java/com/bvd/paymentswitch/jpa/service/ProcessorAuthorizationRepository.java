@@ -12,5 +12,5 @@ public interface ProcessorAuthorizationRepository extends CrudRepository<Process
 	
 	List<ProcessorAuthorization> findByAuthorizationCode(String authId);
 	
-	ProcessorAuthorization findByTypeAndInvoiceNumberAndCardNumberAndResponseCode(String type, String invoiceNumber, String CardNumber, String responseCode);
+	ProcessorAuthorization findByInvoiceNumberAndCardNumberAndUnitNumberAndTypeAndResponseCode(String invoiceNumber, String CardNumber, String unitNumber, String type, String responseCode);
 }

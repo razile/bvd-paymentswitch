@@ -157,8 +157,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 
 	@Override
-	public ProcessorAuthorization findProcessorAuthorization(String type, String invoiceNumber, String cardNumber, String responseCode) {
-		return processorRepository.findByTypeAndInvoiceNumberAndCardNumberAndResponseCode(type, invoiceNumber, cardNumber, responseCode);
+	public ProcessorAuthorization findProcessorAuthorization(String invoiceNumber, String cardNumber, String unitNumber, String type, String responseCode) {
+		return processorRepository.findByInvoiceNumberAndCardNumberAndUnitNumberAndTypeAndResponseCode(invoiceNumber, cardNumber, unitNumber, type, responseCode);
 	}
 	
 	

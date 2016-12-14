@@ -35,5 +35,5 @@ public interface AuthorizationService {
 	
 	void saveFuelCodes(List<FuelCode> codes);
 	
-	ProcessorAuthorization findProcessorAuthorization(String type, String invoiceNumber, String cardNumber, String responseCode);
+	ProcessorAuthorization findProcessorAuthorization(String invoiceNumber, String cardNumber, String unitNumber, String type, String responseCode);
 }
