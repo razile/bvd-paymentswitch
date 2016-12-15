@@ -2,6 +2,7 @@ package com.bvd.paymentswitch.processing.provider;
 
 import java.math.BigDecimal;
 
+import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.handler.AuthorizationHandler;
@@ -155,13 +156,28 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (report.equalsIgnoreCase("SP00007")) {
 			msg += "00036" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber();
 		} else if (report.equalsIgnoreCase("SP00011")) {
-			msg = ""; 
+			
+			FuelCode fc = processorRequest.getFuelCode();
+			msg += "00048" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber() 
+			+ fs + fs + fs + fs + processorRequest.getInvoiceNumber() + fs + processorRequest.getFuel() 
+			+ fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + processorRequest.getTotal() + processorRequest.getTrip() 
+			+ fs + processorRequest.getHubReading() + fs + fs + processorRequest.getDriversLicenseNumber() + fs + processorRequest.getDriversLicenseState()
+			+ fs + processorRequest.getTrailerNumber() + fs + processorRequest.getTrailerHubReading() + processorRequest.getPoNumber()
+			+ fs + processorRequest.getDriverID() + fs;  
+			
+			if (fc.getProductType() == 1) {
+				// this is diesel 1
+				msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fc + fc + fc ;
+			} else {
+				// this is diesel 2
+				msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs + fs ;
+			}
 		} else {
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
 					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
 					+ fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getTrailerHours() + fs +  processorRequest.getTrip() 
 					+ fs + processorRequest.getDriversLicenseNumber() + fs + processorRequest.getDriversLicenseState()
-					+ fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuel();
+					+ fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuelCode().getComdataCode();
 		}
 	
 		
@@ -202,8 +218,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		processorRequest.setTrailerHubReading(posRequest.getTrailerHubReading());
 		processorRequest.setTrailerHours(posRequest.getTrailerHours());
 
-		BigDecimal sellingPrice = posRequest.getSellingPrice();
-		String fuelType = posRequest.getFuelCode().getComdataCode(); 
+		processorRequest.setFuelCode(posRequest.getFuelCode());  
 		
 		// specific tokens by lifecycle
 		if (transType == 0) {
@@ -216,7 +231,6 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 				processorRequest.setType("SP00007");
 			} else {
 				processorRequest.setType("SP00014");
-				processorRequest.setFuel(fuelType);
 			}
 			
 			//processorRequest.setFuel(fuelToken);
@@ -226,10 +240,11 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			processorRequest.setAuthorizationCode(posRequest.getAuthId().trim());
 			processorRequest.setCustomerInformation("I");
 			
+			BigDecimal sellingPrice = posRequest.getSellingPrice();
 			BigDecimal quantity = posRequest.getQuantityNet();
 			BigDecimal amount = posRequest.getAmount();
 
-			String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + ",1,1";
+			String fuelToken = String.valueOf(quantity) + ASCIIChars.ASC47 + sellingPrice;
 			processorRequest.setTotal(amount);
 			processorRequest.setFuel(fuelToken);
 		}

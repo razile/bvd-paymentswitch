@@ -26,17 +26,19 @@ public class FuelCode {
 	@Column(length=32)
 	private String description;
 	
+	private int productType;
 
 	public FuelCode() {
 		super();
 	}
 
-	public FuelCode(String kardallCode, int efsCode, String comdataCode, String description) {
+	public FuelCode(String kardallCode, int efsCode, String comdataCode, String description, int productType) {
 		super();
 		this.kardallCode = kardallCode;
 		this.efsCode = efsCode;
 		this.comdataCode = comdataCode;
 		this.description = description;
+		this.productType = productType;
 	}
 
 	public String getKardallCode() {
@@ -70,6 +72,16 @@ public class FuelCode {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
+	public int getProductType() {
+		return productType;
+	}
+
+	public void setProductType(int productType) {
+		this.productType = productType;
+	}
+	
+	
 	
 	
 }
