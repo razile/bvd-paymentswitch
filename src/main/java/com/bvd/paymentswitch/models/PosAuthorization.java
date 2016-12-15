@@ -177,6 +177,19 @@ public class PosAuthorization {
 	
 	private Timestamp createTimestamp;
 	
+	// the following are comdata specific fields - they need to get added to the Kardall request
+	
+	@Column(length=16)    // will use P3 for this element
+	private String driversLicenseState;
+	
+	@Column(length=16)	 // will user P4 for this element
+	private  String trailerHubReading;
+				
+	@Column(length=16) 		// will use P5 for this element
+	private String trailerHours;
+	
+	// end of comdata fields
+	
 	@Transient
 	private Map<String,String> prompts;
 	
@@ -296,6 +309,9 @@ public class PosAuthorization {
 		this.driverId = xmlFields.get("DI");
 		this.priceDiscount = ProtocolUtils.getBigDecimal(xmlFields.get("DC"),3);
 		this.track2Data = xmlFields.get("TR");
+		this.driversLicenseState = xmlFields.get("P3");
+		this.trailerHubReading = xmlFields.get("P4");
+		this.trailerHours = xmlFields.get("P5");
 	}
 
 	@Override
@@ -344,6 +360,10 @@ public class PosAuthorization {
 			ProtocolUtils.createXmlField("P2", this.tripNumber, fields);
 			ProtocolUtils.createXmlField("DI", this.driverId, fields);
 			ProtocolUtils.createXmlField("CD", this.cdlNumber, fields);
+			ProtocolUtils.createXmlField("P3", this.driversLicenseState, fields);
+			ProtocolUtils.createXmlField("P4", this.trailerHubReading, fields);
+			ProtocolUtils.createXmlField("P5", this.trailerHours, fields);
+			
 		}  else {
 			for (String s: prompts.keySet()) {
 				ProtocolUtils.createXmlField(s,prompts.get(s),fields);
@@ -905,9 +925,30 @@ public class PosAuthorization {
 	public void setFuelCode(FuelCode fuelCode) {
 		this.fuelCode = fuelCode;
 	}
-	
-	
-	
+
+	public String getDriversLicenseState() {
+		return driversLicenseState;
+	}
+
+	public void setDriversLicenseState(String driversLicenseState) {
+		this.driversLicenseState = driversLicenseState;
+	}
+
+	public String getTrailerHubReading() {
+		return trailerHubReading;
+	}
+
+	public void setTrailerHubReading(String trailerHubReading) {
+		this.trailerHubReading = trailerHubReading;
+	}
+
+	public String getTrailerHours() {
+		return trailerHours;
+	}
+
+	public void setTrailerHours(String trailerHours) {
+		this.trailerHours = trailerHours;
+	}
 	
 	
 }

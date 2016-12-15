@@ -78,7 +78,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 		} else {
 			// failed response
-			processorResponse.setMessage("SP00014 Error");
+			processorResponse.setMessage(reply);
 			processorResponse.setErrorCode(processorResponse.getResponseCode());
 		}
 		
@@ -99,13 +99,12 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 			processorResponse.setHubReading(parsePrompt(reply.substring(28,29), null, reply.substring(29,35),reply.substring(35,41),6));
 		
-			
-			//String trailerHub = reply.substring(41,42);
-			//String trailerHours = reply.substring(42,43);
+			processorResponse.setTrailerHubReading(parsePrompt(reply.substring(41,42),null,null,null,6));
+			processorResponse.setTrailerHours(parsePrompt(reply.substring(42,43),null,null,null,6));
 			
 			processorResponse.setTrip(parsePrompt(reply.substring(43,44),reply.substring(46,56),null,null,10));
 			processorResponse.setDriversLicenseNumber(parsePrompt(reply.substring(56,57),reply.substring(57,77),null,null,20));
-			processorResponse.setDlState(parsePrompt(null, reply.substring(77,79), null, null, 2));
+			processorResponse.setDriversLicenseState(parsePrompt(reply.substring(56,57),reply.substring(77,79), null, null, 2));
 			processorResponse.setPoNumber(parsePrompt(reply.substring(79,80),reply.substring(80,90),null,null,10));
 			
 			//String lastName = reply.substring(90,110);
@@ -122,12 +121,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	
 	private String parsePrompt(String indicator, String data, String low, String high, int maxLength) {
 		if (indicator == null) { 
-			if (data != null) {
-				data = data.trim();
-				return (data.length()>0?data:null);
-			} else {
-				return null;
-			}
+			return null;
 		}
 		indicator = indicator.trim();
 		
@@ -136,7 +130,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (indicator.startsWith("C")) {
 			return "L," + maxLength;
 		} else if (indicator.startsWith("V") || indicator.startsWith("E"))  {
-			return "V," + ((data != null) ? data.trim():"");
+			return "V," + ((data != null) ? data.trim():data);
 		} else if (indicator.startsWith("R")) {
 			return "V,M"+ low + ":X" + high;
 		} else { 
@@ -163,10 +157,11 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		} else if (report.equalsIgnoreCase("SP00011")) {
 			msg = ""; 
 		} else {
-			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() + fs 
-					+ processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getOdometerReading()
-					+ fs + processorRequest.getHubReading() + fs + fs + processorRequest.getTrip() + fs + processorRequest.getDriversLicenseNumber() 
-					+ fs + processorRequest.getDlState() + fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuel();
+			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
+					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
+					+ fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getTrailerHours() + fs +  processorRequest.getTrip() 
+					+ fs + processorRequest.getDriversLicenseNumber() + fs + processorRequest.getDriversLicenseState()
+					+ fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuel();
 		}
 	
 		
@@ -203,6 +198,9 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		processorRequest.setHubReading(posRequest.getHubometer());
 		processorRequest.setTrip(posRequest.getTripNumber());
 		processorRequest.setVehiclePlateNumber(posRequest.getTruckNumber());
+		processorRequest.setDriversLicenseState(posRequest.getDriversLicenseState());
+		processorRequest.setTrailerHubReading(posRequest.getTrailerHubReading());
+		processorRequest.setTrailerHours(posRequest.getTrailerHours());
 
 		BigDecimal sellingPrice = posRequest.getSellingPrice();
 		String fuelType = posRequest.getFuelCode().getComdataCode(); 
@@ -219,7 +217,6 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			} else {
 				processorRequest.setType("SP00014");
 				processorRequest.setFuel(fuelType);
-				processorRequest.setDlState(sp7.getDlState());
 			}
 			
 			//processorRequest.setFuel(fuelToken);

@@ -122,8 +122,18 @@ public class ProcessorAuthorization {
 	@Column(name="response_code",length=5) 
 	private String responseCode;
 	
-	@Column(length=16) 
-	private String dlState;
+	// the following are comdata specific fields
+	
+	@Column(length=16)    
+	private String driversLicenseState;
+	
+	@Column(length=16)	 
+	private  String trailerHubReading;
+				
+	@Column(length=16) 		
+	private String trailerHours;
+	
+	// end of comdata fields
 	
 	private Timestamp createTimestamp;
 	
@@ -472,15 +482,41 @@ public class ProcessorAuthorization {
 
 
 
-	public String getDlState() {
-		return dlState;
+	public String getDriversLicenseState() {
+		return driversLicenseState;
 	}
 
 
 
-	public void setDlState(String dlState) {
-		this.dlState = dlState;
+	public void setDriversLicenseState(String driversLicenseState) {
+		this.driversLicenseState = driversLicenseState;
 	}
+
+
+
+	public String getTrailerHubReading() {
+		return trailerHubReading;
+	}
+
+
+
+	public void setTrailerHubReading(String trailerHubReading) {
+		this.trailerHubReading = trailerHubReading;
+	}
+
+
+
+	public String getTrailerHours() {
+		return trailerHours;
+	}
+
+
+
+	public void setTrailerHours(String trailerHours) {
+		this.trailerHours = trailerHours;
+	}
+	
+	
 
 
 }
