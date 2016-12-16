@@ -76,6 +76,9 @@ public class ComdataAuthorizationHandler extends AuthorizationHandler {
 		posResponse.addPrompt("P1", formatPosPrompt(processorResponse.getHubReading()));
 		posResponse.addPrompt("P2", formatPosPrompt(processorResponse.getTrip()));
 		posResponse.addPrompt("DI", formatPosPrompt(processorResponse.getDriverID()));
+		posResponse.addPrompt("P3", formatPosPrompt(processorResponse.getDriversLicenseState()));
+		posResponse.addPrompt("P4", formatPosPrompt(processorResponse.getTrailerHubReading()));
+		posResponse.addPrompt("P5", formatPosPrompt(processorResponse.getTrailerHours()));
 	}
 
 	
