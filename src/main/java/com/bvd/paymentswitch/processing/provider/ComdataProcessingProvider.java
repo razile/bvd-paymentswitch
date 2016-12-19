@@ -149,7 +149,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		
 		String report = processorRequest.getType();
 		
-		char fs = ASCIIChars.ASC47;
+		String fs = String.valueOf(ASCIIChars.ASC47);
 	
 		String msg  = processorRequest.getLocation() + "T" + paymentProcessor.getSoftwareSystem() + report + fs;
 		
@@ -170,7 +170,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 				msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs ;
 			} else {
 				// this is diesel 2
-				msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs + fs ;
+				msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs +  fs + fs + fs + fs + fs ;
 			}
 		} else {
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
@@ -240,11 +240,14 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			processorRequest.setAuthorizationCode(posRequest.getAuthId().trim());
 			processorRequest.setCustomerInformation("I");
 			
-			BigDecimal sellingPrice = posRequest.getSellingPrice();
+		//	BigDecimal sellingPrice = posRequest.getSellingPrice();
 			BigDecimal quantity = posRequest.getQuantityNet();
-			BigDecimal amount = posRequest.getAmount();
+			BigDecimal amount =  posRequest.getAmount();
 
-			String fuelToken = String.valueOf(quantity) + ASCIIChars.ASC47 + sellingPrice;
+			if (quantity != null) quantity = quantity.setScale(2);
+			if (amount != null) amount = amount.setScale(2);
+			
+			String fuelToken = String.valueOf(quantity) + ASCIIChars.ASC47 + amount;
 			processorRequest.setTotal(amount);
 			processorRequest.setFuel(fuelToken);
 		}
