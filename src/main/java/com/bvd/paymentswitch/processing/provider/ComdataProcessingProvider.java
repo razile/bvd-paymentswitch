@@ -2,6 +2,9 @@ package com.bvd.paymentswitch.processing.provider;
 
 import java.math.BigDecimal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
@@ -17,6 +20,7 @@ import io.netty.channel.ChannelHandlerContext;
 
 public class ComdataProcessingProvider extends AbstractProcessingProvider {
 
+	static final Logger logger = LoggerFactory.getLogger(ComdataProcessingProvider.class);
 
 	@Override
 	public ByteBuf getFrameDelimiter() {
@@ -85,9 +89,15 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 				processorResponse.setAuthorizationCode(authCode);
 			}
 			
+			logger.debug("indexOfAmount: " + indexOfAmount);
 			if (indexOfAmount > -1) {
+				logger.debug("Getting amount...");
 				int endIndex = ((indexOfAmount + 10) > reply.length())?indexOfAmount+10:reply.length();
+				
+				logger.debug("endIndex = " + endIndex);
 				String amount = reply.substring(indexOfAmount + 1, endIndex).trim();
+				
+				logger.debug("Amount = " + amount);
 				processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
 			}
 			
