@@ -160,14 +160,14 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			FuelCode fc = processorRequest.getFuelCode();
 			msg += "00048" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber() 
 			+ fs + fs + fs + fs + processorRequest.getInvoiceNumber() + fs + processorRequest.getFuel() 
-			+ fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + processorRequest.getTotal() + processorRequest.getTrip() 
+			+ fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + processorRequest.getTotal() + fs  + processorRequest.getTrip() 
 			+ fs + processorRequest.getHubReading() + fs + fs + processorRequest.getDriversLicenseNumber() + fs + processorRequest.getDriversLicenseState()
-			+ fs + processorRequest.getTrailerNumber() + fs + processorRequest.getTrailerHubReading() + processorRequest.getPoNumber()
+			+ fs + processorRequest.getTrailerNumber() + fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getPoNumber()
 			+ fs + processorRequest.getDriverID() + fs;  
 			
 			if (fc.getProductType() == 1) {
 				// this is diesel 1
-				msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fc + fc + fc ;
+				msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs ;
 			} else {
 				// this is diesel 2
 				msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs + fs ;
