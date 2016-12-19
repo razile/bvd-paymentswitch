@@ -64,7 +64,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (report.equalsIgnoreCase("SP00007")) {
 			parseSP7(processorResponse, reply);
 		} else if (report.equalsIgnoreCase("SP00014")) {
-			parseSP14(processorResponse, reply);
+			parseSP14(processorResponse, posRequest, reply);
 		} else {
 			parseSP11(processorResponse, reply);
 		}
@@ -75,17 +75,28 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	private void parseSP11(ProcessorAuthorization processorResponse, String reply) {
 		if (processorResponse.getResponseCode().equals("00000")) {
 			// good response
-			int indexOfAuth = reply.indexOf("CTL#") + 4;
-			int indexOfAmount = reply.indexOf("$") + 1;
+			int indexOfAuth = reply.indexOf("CTL#");
+			int indexOfAmount = reply.indexOf("$");
 			int indexOfTax = reply.indexOf("TAX");
-		    
-			String authCode = reply.substring(indexOfAuth, indexOfAmount).trim();
-			String amount = reply.substring(indexOfAmount, indexOfTax).trim();
-			String message = reply.substring(indexOfTax).trim();
 			
-			processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
-			processorResponse.setAuthorizationCode(authCode);
-			processorResponse.setMessage(message);
+			
+			if (indexOfAuth > - 1) {
+				String authCode = reply.substring(indexOfAuth + 4, indexOfAuth + 10).trim();
+				processorResponse.setAuthorizationCode(authCode);
+			}
+			
+			if (indexOfAmount > -1) {
+				int endIndex = ((indexOfAmount + 10) > reply.length())?indexOfAmount+10:reply.length();
+				String amount = reply.substring(indexOfAmount + 1, endIndex).trim();
+				processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
+			};
+			
+			if (indexOfTax > -1) {
+				int endIndex = ((indexOfTax + 13) > reply.length())?indexOfTax+13:reply.length();
+				String message = reply.substring(indexOfTax, endIndex).trim();
+				processorResponse.setMessage(message);
+			} 
+
 			
 		} else {
 			// failed response
@@ -96,11 +107,21 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		
 	}
 
-	private void parseSP14(ProcessorAuthorization processorResponse, String reply) {
+	private void parseSP14(ProcessorAuthorization processorResponse, PosAuthorization posRequest, String reply) {
 		if (processorResponse.getResponseCode().equals("00000")) {
 			// good response
-			processorResponse.setTotal(ProtocolUtils.getBigDecimal(reply.substring(0,7).trim(), 2));
 			
+			String dollarLimit = null;
+			if (posRequest.getFuelCode().getProductType() == 1) {
+				dollarLimit = reply.substring(49,56).trim();
+			} else if (posRequest.getFuelCode().getProductType() == 2){
+				dollarLimit = reply.substring(35,42).trim();
+			} else {
+				dollarLimit = reply.substring(0,7).trim(); 
+			}
+			
+			dollarLimit = dollarLimit.substring(0, dollarLimit.length()-2) + "." + dollarLimit.substring(dollarLimit.length()-2); 
+			processorResponse.setTotal(ProtocolUtils.getBigDecimal(dollarLimit,2));
 		} else {
 			// failed response
 			processorResponse.setMessage(reply);
