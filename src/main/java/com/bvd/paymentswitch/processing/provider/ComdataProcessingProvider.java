@@ -80,7 +80,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			int indexOfTax = reply.indexOf("TAX");
 			
 			
-			if (indexOfAuth > - 1) {
+			if (indexOfAuth > -1) {
 				String authCode = reply.substring(indexOfAuth + 4, indexOfAuth + 10).trim();
 				processorResponse.setAuthorizationCode(authCode);
 			}
@@ -89,7 +89,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 				int endIndex = ((indexOfAmount + 10) > reply.length())?indexOfAmount+10:reply.length();
 				String amount = reply.substring(indexOfAmount + 1, endIndex).trim();
 				processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
-			};
+			}
 			
 			if (indexOfTax > -1) {
 				int endIndex = ((indexOfTax + 13) > reply.length())?indexOfTax+13:reply.length();
