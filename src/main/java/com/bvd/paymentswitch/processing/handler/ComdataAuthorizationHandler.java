@@ -41,7 +41,13 @@ public class ComdataAuthorizationHandler extends AuthorizationHandler {
 			}
 			
     	} else if (type.equals("SP00011")) {
-    		// this was a completion
+    		if (responseCode.equals("00000")) {
+				posResponse.setAuthorized(processorResponse.getAuthorizationCode());
+				posResponse.setAmount(processorResponse.getTotal());
+				posResponse.setMessage(processorResponse.getMessage());
+			} else {
+				posResponse.setDenied(responseCode, processorResponse.getMessage());
+			}
     		
 		} else {
 			// this is a failed transaction

@@ -72,6 +72,30 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		return processorResponse;
 	}
 
+	private void parseSP11(ProcessorAuthorization processorResponse, String reply) {
+		if (processorResponse.getResponseCode().equals("00000")) {
+			// good response
+			int indexOfAuth = reply.indexOf("CTL#") + 4;
+			int indexOfAmount = reply.indexOf("$") + 1;
+			int indexOfTax = reply.indexOf("TAX");
+		    
+			String authCode = reply.substring(indexOfAuth, indexOfAmount).trim();
+			String amount = reply.substring(indexOfAmount, indexOfTax).trim();
+			String message = reply.substring(indexOfTax).trim();
+			
+			processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
+			processorResponse.setAuthorizationCode(authCode);
+			processorResponse.setMessage(message);
+			
+		} else {
+			// failed response
+			processorResponse.setMessage(reply);
+			processorResponse.setErrorCode(processorResponse.getResponseCode());
+		}
+		
+		
+	}
+
 	private void parseSP14(ProcessorAuthorization processorResponse, String reply) {
 		if (processorResponse.getResponseCode().equals("00000")) {
 			// good response
@@ -83,11 +107,6 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			processorResponse.setErrorCode(processorResponse.getResponseCode());
 		}
 		
-		
-	}
-
-	private void parseSP11(ProcessorAuthorization processorResponse, String body) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -240,7 +259,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			processorRequest.setAuthorizationCode(posRequest.getAuthId().trim());
 			processorRequest.setCustomerInformation("I");
 			
-		//	BigDecimal sellingPrice = posRequest.getSellingPrice();
+			//BigDecimal sellingPrice = posRequest.getSellingPrice();
 			BigDecimal quantity = posRequest.getQuantityNet();
 			BigDecimal amount =  posRequest.getAmount();
 
