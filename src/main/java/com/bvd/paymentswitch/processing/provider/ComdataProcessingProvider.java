@@ -89,20 +89,14 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 				processorResponse.setAuthorizationCode(authCode);
 			}
 			
-			logger.debug("indexOfAmount: " + indexOfAmount);
 			if (indexOfAmount > -1) {
-				logger.debug("Getting amount...");
-				int endIndex = ((indexOfAmount + 10) > reply.length())?indexOfAmount+10:reply.length();
-				
-				logger.debug("endIndex = " + endIndex);
+				int endIndex = ((indexOfAmount + 10) <= reply.length())?indexOfAmount+10:reply.length();
 				String amount = reply.substring(indexOfAmount + 1, endIndex).trim();
-				
-				logger.debug("Amount = " + amount);
 				processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
 			}
 			
 			if (indexOfTax > -1) {
-				int endIndex = ((indexOfTax + 13) > reply.length())?indexOfTax+13:reply.length();
+				int endIndex = ((indexOfTax + 13) <= reply.length())?indexOfTax+13:reply.length();
 				String message = reply.substring(indexOfTax, endIndex).trim();
 				processorResponse.setMessage(message);
 			} 
