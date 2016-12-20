@@ -199,32 +199,32 @@ public class PaymentSwitch {
 	    		authService.saveBin(cd2);
 	    		
 	    		ArrayList<FuelCode> fuelCodes = new ArrayList<FuelCode>();
-	    		fuelCodes.add(new FuelCode("010",1,"002","Diesel #1",1));
-	    		fuelCodes.add(new FuelCode("001",2,"003","Diesel #2",2));
+	    		fuelCodes.add(new FuelCode("010",1,"019","Diesel #1",1));  //
+	    		fuelCodes.add(new FuelCode("001",2,"020","Diesel #2",2));
 	    		fuelCodes.add(new FuelCode("051",4,"001","Unleaded Regular",0));
-	    		fuelCodes.add(new FuelCode("053",8,"004","Unleaded Plus",0));
-	    		fuelCodes.add(new FuelCode("055",16,"005","Unleaded Premium",0));
-	    		fuelCodes.add(new FuelCode("080",32,"006","Propane",0));
-	    		fuelCodes.add(new FuelCode("048",64,"007","Kerosene",0));
-	    		fuelCodes.add(new FuelCode("091",128,"008","Dyed/Marked Diesel",0));
-	    		fuelCodes.add(new FuelCode("256",256,"009","Bio Diesel",2));
-	    		fuelCodes.add(new FuelCode("100",512,"010","Car Diesel",0));
-	    		fuelCodes.add(new FuelCode("086",1024,"011","AG Fuel",0));
-	    		fuelCodes.add(new FuelCode("085",2048,"012","Gasohol",0));
-	    		fuelCodes.add(new FuelCode("101",4096,"013","Natural Gas",0));
+	    		fuelCodes.add(new FuelCode("053",8,"002","Unleaded Plus",0));
+	    		fuelCodes.add(new FuelCode("055",16,"003","Unleaded Premium",0));
+	    		fuelCodes.add(new FuelCode("080",32,"023","Propane",0));
+	    		fuelCodes.add(new FuelCode("048",64,"305","Kerosene",0));
+	    		fuelCodes.add(new FuelCode("091",128,"059","Dyed/Marked Diesel",3));
+	    		fuelCodes.add(new FuelCode("256",256,"825","Bio Diesel",2));
+	    		fuelCodes.add(new FuelCode("100",512,"033","Car Diesel",3));
+	    		fuelCodes.add(new FuelCode("086",1024,"399","AG Fuel",0));
+	    		fuelCodes.add(new FuelCode("085",388,"012","Gasohol",0));
+	    		fuelCodes.add(new FuelCode("101",4096,"022","Natural Gas",0));
 	    		fuelCodes.add(new FuelCode("200",8192,"053","Ultra Low Sulfur Diesel",2));
-	    		fuelCodes.add(new FuelCode("201",16384,"076","Ultra Low Sulfur Diesel #1",2));
-	    		fuelCodes.add(new FuelCode("102",32768,"014","Ultra Low Sulfur Car Diesel",0));
-	    		fuelCodes.add(new FuelCode("095",65536,"015","Cardlock Gasoline",0));
-	    		fuelCodes.add(new FuelCode("096",131072,"016","Dyed/Marked Unleaded",0));
-	    		fuelCodes.add(new FuelCode("097",262144,"017","Dyed/Marked Plus",0));
-	    		fuelCodes.add(new FuelCode("098",524288,"018","Dyed/Marked Premium",0));
-	    		fuelCodes.add(new FuelCode("103",1048576,"019","Racing Fuel",0));
-	    		fuelCodes.add(new FuelCode("104",2097152,"020","Furnace/Heating Oil",0));
-	    		fuelCodes.add(new FuelCode("099",4194304,"021","UREA/DEF",0));
+	    		fuelCodes.add(new FuelCode("201",16384,"076","Ultra Low Sulfur Diesel #1",1));  //
+	    		fuelCodes.add(new FuelCode("102",32768,"034","Ultra Low Sulfur Car Diesel",3));
+	    		fuelCodes.add(new FuelCode("095",65536,"399","Cardlock Gasoline",0));
+	    		fuelCodes.add(new FuelCode("096",131072,"157","Dyed/Marked Unleaded",0));
+	    		fuelCodes.add(new FuelCode("097",262144,"158","Dyed/Marked Plus",0));
+	    		fuelCodes.add(new FuelCode("098",524288,"159","Dyed/Marked Premium",0));
+	    		fuelCodes.add(new FuelCode("103",1048576,"036","Racing Fuel",0));
+	    		fuelCodes.add(new FuelCode("104",2097152,"302","Furnace/Heating Oil",0));
+	    		fuelCodes.add(new FuelCode("099",4194304,"819","UREA/DEF",0));
 	    		fuelCodes.add(new FuelCode("082",8388608,"022","CNG (Compressed Natural Gas)",0));
-	    		fuelCodes.add(new FuelCode("105",16777216,"023","LNG (Liquid Natural Gas)",0));
-	    		fuelCodes.add(new FuelCode("106",33554432,"024","LCNG",0));
+	    		fuelCodes.add(new FuelCode("105",16777216,"024","LNG (Liquid Natural Gas)",0));
+	    		fuelCodes.add(new FuelCode("106",33554432,"311","LCNG",0));
 	    		
 	    		authService.saveFuelCodes(fuelCodes);
 

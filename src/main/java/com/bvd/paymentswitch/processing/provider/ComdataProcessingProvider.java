@@ -115,17 +115,45 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (processorResponse.getResponseCode().equals("00000")) {
 			// good response
 			
-			String dollarLimit = null;
-			if (posRequest.getFuelCode().getProductType() == 1) {
-				dollarLimit = reply.substring(49,56).trim();
-			} else if (posRequest.getFuelCode().getProductType() == 2){
-				dollarLimit = reply.substring(35,42).trim();
-			} else {
-				dollarLimit = reply.substring(0,7).trim(); 
+			
+			String totalDollarLimit = reply.substring(0,7).trim();
+			totalDollarLimit = totalDollarLimit.substring(0, totalDollarLimit.length()-2) + "." + totalDollarLimit.substring(totalDollarLimit.length()-2);
+			BigDecimal totolLimit = ProtocolUtils.getBigDecimal(totalDollarLimit,2);
+			
+			String purchaseCategory = reply.substring(98,103).trim();
+			
+			String fuelDollarLimit = "0000000";
+			int productType =  posRequest.getFuelCode().getProductType();
+			switch (productType) {
+				case 0:
+					if ("20004".equals(purchaseCategory)) fuelDollarLimit = reply.substring(77,84).trim(); 
+					break;
+				case 1: 
+					if ("20002".equals(purchaseCategory)) fuelDollarLimit = reply.substring(49,56).trim();
+					break;
+				case 2:
+					if ("20001".equals(purchaseCategory)) fuelDollarLimit = reply.substring(35,42).trim();
+					break;
+				case 3:
+					if ("20003".equals(purchaseCategory)) fuelDollarLimit = reply.substring(63,70).trim(); 
+					break;
+				default:
+					break;
 			}
 			
-			dollarLimit = dollarLimit.substring(0, dollarLimit.length()-2) + "." + dollarLimit.substring(dollarLimit.length()-2); 
-			processorResponse.setTotal(ProtocolUtils.getBigDecimal(dollarLimit,2));
+			
+			fuelDollarLimit = fuelDollarLimit.substring(0, fuelDollarLimit.length()-2) + "." + fuelDollarLimit.substring(fuelDollarLimit.length()-2); 
+			
+			logger.debug("Category: " + purchaseCategory + ", Product Type: " + productType + ", Limit: " + fuelDollarLimit);
+			
+			BigDecimal fuelLimit = ProtocolUtils.getBigDecimal(fuelDollarLimit,2);
+			
+			if (fuelLimit != null && fuelLimit.floatValue()  > 0) {
+				processorResponse.setTotal(fuelLimit);
+			} else {
+				processorResponse.setTotal(totolLimit);
+			}
+
 		} else {
 			// failed response
 			processorResponse.setMessage(reply);
@@ -209,13 +237,25 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			+ fs + processorRequest.getTrailerNumber() + fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getPoNumber()
 			+ fs + processorRequest.getDriverID() + fs;  
 			
-			if (fc.getProductType() == 1) {
-				// this is diesel 1
-				msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs ;
-			} else {
-				// this is diesel 2
-				msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs +  fs + fs + fs + fs + fs ;
+			switch (fc.getProductType()) {
+				case 0:
+					msg += fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs ;
+					break;
+				case 1:
+					msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs ;
+					break;
+				case 2:
+					msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs +  fs + fs + fs + fs + fs ;
+					break;
+				case 3:
+					msg += fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs + fs ;
+					break;
+				default:
+					msg += fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs ;
+					break;
 			}
+			
+		
 		} else {
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
 					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
