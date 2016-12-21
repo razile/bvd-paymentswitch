@@ -1,6 +1,7 @@
 package com.bvd.paymentswitch.processing.provider;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,7 +180,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 			
 			BigDecimal fuelLimit = (fuelMax.compareTo(max) < 0) ? fuelMax:max;
-			fuelLimit = fuelLimit.setScale(2);
+			fuelLimit = fuelLimit.setScale(2, RoundingMode.FLOOR);
 			
 			logger.debug("Category: " + purchaseCategory + ", Product Type: " + productType + ", Limit: " + fuelLimit);
 			
