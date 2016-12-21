@@ -179,6 +179,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 			
 			BigDecimal fuelLimit = (fuelMax.compareTo(max) < 0) ? fuelMax:max;
+			fuelLimit = fuelLimit.setScale(2);
 			
 			logger.debug("Category: " + purchaseCategory + ", Product Type: " + productType + ", Limit: " + fuelLimit);
 			
