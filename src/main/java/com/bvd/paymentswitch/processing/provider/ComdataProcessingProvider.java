@@ -116,42 +116,79 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			// good response
 			
 			
-			String totalDollarLimit = reply.substring(0,7).trim();
-			totalDollarLimit = totalDollarLimit.substring(0, totalDollarLimit.length()-2) + "." + totalDollarLimit.substring(totalDollarLimit.length()-2);
-			BigDecimal totolLimit = ProtocolUtils.getBigDecimal(totalDollarLimit,2);
+			String maxDollarLimit = reply.substring(0,7).trim();
+			maxDollarLimit = maxDollarLimit.substring(0, maxDollarLimit.length()-2) + "." + maxDollarLimit.substring(maxDollarLimit.length()-2);
+			BigDecimal maxByDollarLimit = ProtocolUtils.getBigDecimal(maxDollarLimit,2);
+			
+			String maxQuantityLimit = reply.substring(7,14).trim();
+			maxQuantityLimit = maxQuantityLimit.substring(0, maxQuantityLimit.length()-2) + "." + maxQuantityLimit.substring(maxQuantityLimit.length()-2);
+			BigDecimal maxByQuantityLimit = ProtocolUtils.getBigDecimal(maxQuantityLimit,2);
+			
+			BigDecimal maxBySellingPrice = maxByQuantityLimit.multiply(posRequest.getSellingPrice());
+			BigDecimal max = (maxBySellingPrice.compareTo(maxByDollarLimit) < 0) ? maxBySellingPrice:maxByDollarLimit;
+			
 			
 			String purchaseCategory = reply.substring(98,103).trim();
 			
 			String fuelDollarLimit = "0000000";
+			String fuelQuantityLimit = "0000000";
+			
 			int productType =  posRequest.getFuelCode().getProductType();
 			switch (productType) {
 				case 0:
-					if ("20004".equals(purchaseCategory)) fuelDollarLimit = reply.substring(77,84).trim(); 
+					if ("20004".equals(purchaseCategory)) {
+						fuelDollarLimit = reply.substring(77,84).trim(); 
+						fuelQuantityLimit = reply.substring(84,91).trim();
+					}
 					break;
 				case 1: 
-					if ("20002".equals(purchaseCategory)) fuelDollarLimit = reply.substring(49,56).trim();
+					if ("20002".equals(purchaseCategory)) {
+						fuelDollarLimit = reply.substring(49,56).trim();
+						fuelQuantityLimit = reply.substring(56,63).trim();
+					}
 					break;
 				case 2:
-					if ("20001".equals(purchaseCategory)) fuelDollarLimit = reply.substring(35,42).trim();
+					if ("20001".equals(purchaseCategory)) {
+						fuelDollarLimit = reply.substring(35,42).trim();
+						fuelQuantityLimit = reply.substring(42,49).trim();
+					}
 					break;
 				case 3:
-					if ("20003".equals(purchaseCategory)) fuelDollarLimit = reply.substring(63,70).trim(); 
+					if ("20003".equals(purchaseCategory)) {
+						fuelDollarLimit = reply.substring(63,70).trim(); 
+						fuelQuantityLimit = reply.substring(70,77).trim();
+					}
 					break;
 				default:
 					break;
 			}
 			
 			
-			fuelDollarLimit = fuelDollarLimit.substring(0, fuelDollarLimit.length()-2) + "." + fuelDollarLimit.substring(fuelDollarLimit.length()-2); 
+			fuelDollarLimit = fuelDollarLimit.substring(0, fuelDollarLimit.length()-2) + "." + fuelDollarLimit.substring(fuelDollarLimit.length()-2);
+			fuelQuantityLimit = fuelQuantityLimit.substring(0, fuelQuantityLimit.length()-2) + "." + fuelQuantityLimit.substring(fuelQuantityLimit.length()-2);
 			
-			logger.debug("Category: " + purchaseCategory + ", Product Type: " + productType + ", Limit: " + fuelDollarLimit);
+			//logger.debug("Category: " + purchaseCategory + ", Product Type: " + productType + ", Limit: " + fuelDollarLimit);
 			
-			BigDecimal fuelLimit = ProtocolUtils.getBigDecimal(fuelDollarLimit,2);
+			BigDecimal fuelByDollarLimit = ProtocolUtils.getBigDecimal(fuelDollarLimit,2);
+			BigDecimal fuelByQuantityLimit = ProtocolUtils.getBigDecimal(fuelQuantityLimit,2);
+			
+
+			BigDecimal fuelMaxBySellingPrice = fuelByQuantityLimit.multiply(posRequest.getSellingPrice());
+			BigDecimal fuelMax = (fuelMaxBySellingPrice.compareTo(fuelByDollarLimit) < 0) ? fuelMaxBySellingPrice:fuelByDollarLimit;
+			
+			
+			
+			BigDecimal fuelLimit = (fuelMax.compareTo(max) < 0) ? fuelMax:max;
+			
+			logger.debug("Category: " + purchaseCategory + ", Product Type: " + productType + ", Limit: " + fuelLimit);
 			
 			if (fuelLimit != null && fuelLimit.floatValue()  > 0) {
 				processorResponse.setTotal(fuelLimit);
 			} else {
-				processorResponse.setTotal(totolLimit);
+				// deny
+				processorResponse.setMessage("Fuel Not Authorized");
+				processorResponse.setResponseCode("00050");
+				processorResponse.setErrorCode("00050");
 			}
 
 		} else {
@@ -257,6 +294,11 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 		
 		} else {
+			
+			processorRequest.setTrailerHubReading("150000");
+			processorRequest.setTrailerHours("2000");
+			processorRequest.setDriversLicenseState("ON");
+			
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
 					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
 					+ fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getTrailerHours() + fs +  processorRequest.getTrip() 
