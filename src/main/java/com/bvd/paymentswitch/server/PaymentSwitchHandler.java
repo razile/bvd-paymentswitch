@@ -64,6 +64,8 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 			
 			if (provider == null) {
 				sendErrorResponse(ctx, request, "Unable to process card");
+			} else if (provider.getPaymentProcessor().getName().equalsIgnoreCase("COMDATA") && (request.getUnitNumber() == null || request.getUnitNumber().length() == 0)) {
+				sendUnitPromptResponse(ctx, request);
 			} else {
 				// authorize it
 				String merchantCode = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
@@ -91,6 +93,18 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	 		// close the channel once the content is fully written
 	    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 		}
+	}
+	
+	
+	public void sendUnitPromptResponse(ChannelHandlerContext ctx, PosAuthorization request) {
+		PosAuthorization response = new PosAuthorization(request);
+		response.setResponseFlags(request);
+		response.setDenied("00020","Unit Number Required");
+		response.addPrompt("M2", "L,X6");
+		
+		ctx.write(response.toString());
+ 		// close the channel once the content is fully written
+    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 	}
 	
 	
