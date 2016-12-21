@@ -99,10 +99,12 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	public void sendUnitPromptResponse(ChannelHandlerContext ctx, PosAuthorization request) {
 		PosAuthorization response = new PosAuthorization(request);
 		response.setResponseFlags(request);
-		response.setDenied("00020","Unit Number Required");
+		response.setReauthForComdata("Unit Number Required");
 		response.addPrompt("M2", "L,X6");
 		
-		ctx.write(response.toString());
+		String resp = response.toString();
+		logger.debug("SEND: " + resp);
+		ctx.write(resp);
  		// close the channel once the content is fully written
     	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 	}
@@ -113,7 +115,9 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 		response.setResponseFlags(request);
 		response.setDenied(error, null);
 		
-		ctx.write(response.toString());
+		String resp = response.toString();
+		logger.debug("SEND: " + resp);
+		ctx.write(resp);
  		// close the channel once the content is fully written
     	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 	}
