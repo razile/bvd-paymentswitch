@@ -198,6 +198,17 @@ public class PaymentSwitch {
 	    		cd2.setPaymentProcessor(comdata);
 	    		authService.saveBin(cd2);
 	    		
+	    		BinPaymentProcessor cd3 = new BinPaymentProcessor();
+	    		cd3.setBin("560017");
+	    		cd3.setPaymentProcessor(comdata);
+	    		authService.saveBin(cd3);
+	    		
+	    		BinPaymentProcessor cd4 = new BinPaymentProcessor();
+	    		cd4.setBin("161953");
+	    		cd4.setPaymentProcessor(comdata);
+	    		authService.saveBin(cd4);
+	    		
+	    		
 	    		ArrayList<FuelCode> fuelCodes = new ArrayList<FuelCode>();
 	    		fuelCodes.add(new FuelCode("010",1,"019","Diesel #1",1));  //
 	    		fuelCodes.add(new FuelCode("001",2,"020","Diesel #2",2));
