@@ -59,7 +59,7 @@ public class ProcessorAuthorization {
 	@Column(name="invoice_number",length=10)
 	private String invoiceNumber;		// Character (10)	INVN:	
 	
-	@Column(length=32)
+	@Column(length=64)
 	private String cardToken;			// Character (20)	CDSW:	only send one of CARD/CDSW
 	
 	@Column(name="card_number",length=32)
