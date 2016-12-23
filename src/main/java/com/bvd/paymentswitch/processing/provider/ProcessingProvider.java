@@ -37,7 +37,7 @@ public interface ProcessingProvider {
 	
 	
 	
-	void saveProcessorResponse(ProcessorAuthorization processorResponse);
+	void saveProcessorAuthorization(ProcessorAuthorization auth);
 	
 	
 }

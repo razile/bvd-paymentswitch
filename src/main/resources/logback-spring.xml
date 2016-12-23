@@ -17,7 +17,7 @@
 	<springProfile name="production">
 		<property name="LOG_PATH" value="./logs/production" />
     	<property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" />
-		<property name="LOG_LEVEL" value="info" />
+		<property name="LOG_LEVEL" value="debug" />
 	</springProfile>
 	
 	<appender name="Request-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">

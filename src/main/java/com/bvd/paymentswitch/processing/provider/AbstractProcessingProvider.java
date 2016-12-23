@@ -41,8 +41,8 @@ public abstract class AbstractProcessingProvider implements ProcessingProvider {
 	}
 	
 	@Override 
-	public void saveProcessorResponse(ProcessorAuthorization response) {
-		authService.saveAuthorization(response, this);
+	public void saveProcessorAuthorization(ProcessorAuthorization auth) {
+		authService.saveAuthorization(auth, this);
 	}
 
 

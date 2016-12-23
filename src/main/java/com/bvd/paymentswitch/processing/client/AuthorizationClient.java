@@ -40,6 +40,8 @@ public class AuthorizationClient {
 	        try {
 	        	PaymentProcessor p = provider.getPaymentProcessor();
 	        	ProcessorAuthorization processorRequest = provider.createProcessorRequest(posRequest, merchantCode);
+	        	
+	        	//provider.saveProcessorAuthorization(processorRequest);
 	            
 	        	
 	        	Bootstrap b = new Bootstrap();

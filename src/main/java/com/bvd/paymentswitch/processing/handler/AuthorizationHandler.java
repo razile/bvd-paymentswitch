@@ -59,7 +59,7 @@ public abstract class AuthorizationHandler extends SimpleChannelInboundHandler<S
     	responseLogger.info(msg);
     	ProcessorAuthorization processorResponse = processingProvider.parseProcessorResponse(posRequest, msg); 	
     	
-    	processingProvider.saveProcessorResponse(processorResponse);
+    	processingProvider.saveProcessorAuthorization(processorResponse);
     	
     	handleResponse(processorResponse);
     	

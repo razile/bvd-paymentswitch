@@ -2,6 +2,7 @@ package com.bvd.test;
 
 import java.math.BigDecimal;
 
+import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 public class ComdataAuthText {
@@ -60,6 +61,11 @@ public class ComdataAuthText {
 		
 		System.out.println("DollarLimit: " + dollarLimit + " Amount: " + dollars);
 		
+		
+		String request = "ON305TTCPISP00014/00085/A5600171620203812=49121201491/1234567890/123456/3812/123456/150000/2000/" + null + "/" + null + "/ON/" + null + "/P/053";
+		System.out.println(request);
+		request = request.replace("null","");
+		System.out.print(request);
 	}
 
 }

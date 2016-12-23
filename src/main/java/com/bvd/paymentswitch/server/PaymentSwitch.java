@@ -142,6 +142,7 @@ public class PaymentSwitch {
 	    		authService.saveMerchantCode("BVDNORT55816",tchek.getId(),"58011");
 	    		authService.saveMerchantCode("BVDNIPI55530",tchek.getId(),"58078");
 	    		authService.saveMerchantCode("BVDWINN86790",tchek.getId(),"55012");
+	    		authService.saveMerchantCode("BVDKAML54054",tchek.getId(),"54055");
 	    		
 	    		
 	    		PaymentProcessor comdata = new PaymentProcessor();

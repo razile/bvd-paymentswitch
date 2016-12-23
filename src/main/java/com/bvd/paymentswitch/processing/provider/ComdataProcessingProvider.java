@@ -299,7 +299,17 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			
 			processorRequest.setTrailerHubReading("150000");
 			processorRequest.setTrailerHours("2000");
-			processorRequest.setDriversLicenseState("ON");
+			
+			String card = processorRequest.getCardNumber();
+			if (card != null) {
+				if (card.endsWith("3812") || card.endsWith("3838")) {
+					processorRequest.setDriversLicenseState("OH");
+				} else {
+					processorRequest.setDriversLicenseState("ON");
+				}
+			}
+			
+			
 			
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
 					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
@@ -308,6 +318,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 					+ fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuelCode().getComdataCode();
 		}
 	
+		msg = msg.replace("null","");
 		
 		return msg;
 	}
@@ -372,8 +383,8 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			BigDecimal quantity = posRequest.getQuantityNet();
 			BigDecimal amount =  posRequest.getAmount();
 
-			if (quantity != null) quantity = quantity.setScale(2);
-			if (amount != null) amount = amount.setScale(2);
+			if (quantity != null) quantity = quantity.setScale(2, RoundingMode.HALF_UP);
+			if (amount != null) amount = amount.setScale(2, RoundingMode.HALF_UP);
 			
 			String fuelToken = String.valueOf(quantity) + ASCIIChars.ASC47 + amount;
 			processorRequest.setTotal(amount);
