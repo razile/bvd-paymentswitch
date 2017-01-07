@@ -16,24 +16,33 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.guava.GuavaCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
 
 import com.bvd.paymentswitch.server.PaymentSwitch;
 import com.bvd.paymentswitch.server.PaymentSwitchInitializer;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
+import com.google.common.cache.CacheBuilder;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +57,7 @@ import org.slf4j.LoggerFactory;
 @EnableAsync
 @EnableCaching
 @EnableSpringConfigured
+@EnableScheduling
 public class Application  {
    
 	static final Logger logger = LoggerFactory.getLogger(Application.class);
@@ -174,7 +184,30 @@ public class Application  {
     	}
     	return sslCtx;
     }
-
+    
+    @Bean
+    public CacheManager cacheManager() {
+    	SimpleCacheManager simpleCacheManager = new SimpleCacheManager();
+    	
+    	GuavaCache merchants = new GuavaCache("merchants", CacheBuilder.newBuilder()
+    									.expireAfterWrite(12, TimeUnit.HOURS)
+    									.build());
+    	
+    	GuavaCache fuelCodes = new GuavaCache("fuelcodes", CacheBuilder.newBuilder().build());
+    	
+    	GuavaCache providers = new GuavaCache("providers", CacheBuilder.newBuilder().build());
+    									
+    	
+    	simpleCacheManager.setCaches(Arrays.asList(merchants,fuelCodes,providers));
+    	
+    	return simpleCacheManager;
+    }
+    
+	@Bean
+	public RestTemplate restTemplate(RestTemplateBuilder builder) {
+		return builder.build();
+	}
+	
     
 
 }

@@ -2,7 +2,6 @@ package com.bvd.test;
 
 import java.math.BigDecimal;
 
-import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 public class ComdataAuthText {

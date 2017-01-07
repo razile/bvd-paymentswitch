@@ -108,7 +108,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 
 	@Override
-	@Cacheable("merchantIds")
+	@Cacheable("merchants")
 	public String findMerchantID(String siteId, Short paymentProcessorId) {
 		// TODO Auto-generated method stub
 		MerchantCodePK pk = new MerchantCodePK(siteId, paymentProcessorId);
@@ -129,30 +129,36 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 
 	@Override
-	@Cacheable("fuelcodes")
-	public FuelCode findEFSFuelCode(int code) {
-		FuelCode fc = fuelCodeRepository.findByEfsCode(code);
-		return fc;
-	}
-
-
-	@Override
-	@Cacheable("fuelcodes")
-	public FuelCode findComdataFuelCode(String code) {
-		FuelCode fc = fuelCodeRepository.findByComdataCode(code);
-		return fc;
-	}
-
-
-	@Override
 	public void saveFuelCodes(List<FuelCode> codes) {
 		fuelCodeRepository.save(codes);
 	}
 
 
+//	@Override
+//	public Iterable<PaymentProcessor> getAllPaymentProcessors() {
+//		return paymentProcessorRepository.findAll();
+//	}
 	@Override
-	public Iterable<PaymentProcessor> getAllPaymentProcessors() {
-		return paymentProcessorRepository.findAll();
+	@Cacheable("providers")
+	public ProcessingProvider getProcessingProvider(String bin) {
+	
+		BinPaymentProcessor binpay = binRepository.findOne(bin);
+		
+		if (binpay != null) {
+			PaymentProcessor p = binpay.getPaymentProcessor();
+			try {
+				logger.debug("Loading " + p.getName() + " provider for BIN: " + bin);
+				Class<?> clazz = Class.forName(p.getProviderClass());
+				ProcessingProvider provider = (ProcessingProvider) clazz.newInstance();
+				provider.initialize(p, this);
+				return provider;
+			} catch (Exception e) {
+				logger.error("Unable to initialize " + p.getName() + " provider for BIN: " + bin, e.getMessage());
+				return null;
+			}
+		} else {
+			return null;
+		}
 	}
 
 

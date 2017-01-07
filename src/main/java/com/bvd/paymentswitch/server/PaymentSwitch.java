@@ -11,7 +11,6 @@ import com.bvd.paymentswitch.jpa.service.AuthorizationService;
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
 import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PaymentProcessor;
-import com.bvd.paymentswitch.processing.provider.ProviderFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +35,6 @@ public class PaymentSwitch {
 		@Autowired
 		private AuthorizationService authService;
 		
-		@Autowired
-		ProviderFactory providerFactory;
-		
 		@Value("${data.seed:false}")
 		private boolean seedData;
 		
@@ -57,8 +53,6 @@ public class PaymentSwitch {
 	    		seedData();
 	    	}
 	    	
-	    	logger.info("Loading processing providers...");
-	    	providerFactory.loadProviders();
 	    	logger.info("Payment Switch listening on port " + tcpPort.getPort() );
 	        serverChannel =  serverBootstrap.bind(tcpPort).sync().channel().closeFuture().sync().channel();
 	    }

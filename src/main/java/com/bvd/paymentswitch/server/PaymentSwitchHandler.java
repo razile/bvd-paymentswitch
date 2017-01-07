@@ -10,7 +10,6 @@ import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.processing.client.AuthorizationClient;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
-import com.bvd.paymentswitch.processing.provider.ProviderFactory;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
 
@@ -35,10 +34,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	
 	@Autowired
 	private AuthorizationService authService;
-	
-	@Autowired
-	private ProviderFactory providerFactory;
-	
+
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();
@@ -60,7 +56,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 
 			// find processor 
 			String bin = request.getCard1().substring(0,6);
-			ProcessingProvider provider = providerFactory.getProvider(bin);
+			ProcessingProvider provider = authService.getProcessingProvider(bin);
 			
 			if (provider == null) {
 				sendErrorResponse(ctx, request, "Unable to process card");
@@ -68,15 +64,15 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 				sendUnitPromptResponse(ctx, request);
 			} else {
 				// authorize it
-				String merchantCode = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
+				String merchantId = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
 				
-				if (merchantCode == null || merchantCode.isEmpty()) {
+				if (merchantId == null || merchantId.isEmpty()) {
 					sendErrorResponse(ctx, request, "Unknown merchant");
 				} else {
 					FuelCode fc = authService.findFuelCode(request.getFuelType());
 					request.setFuelCode(fc);
 					try {
-						authClient.authorize(request, provider, merchantCode, ctx);
+						authClient.authorize(request, provider, merchantId, ctx);
 					} catch (Exception e) {
 						logger.debug(e.getMessage());
 						sendErrorResponse(ctx, request, "Error processing card");

@@ -21,17 +21,15 @@ public interface AuthorizationService {
 	
 	BinPaymentProcessor saveBin(BinPaymentProcessor b);
 	
-	Iterable<PaymentProcessor> getAllPaymentProcessors();
+	// Iterable<PaymentProcessor> getAllPaymentProcessors();
+	
+	ProcessingProvider getProcessingProvider(String bin);
 	
 	String findMerchantID(String siteId, Short paymentProcessorId);
 	
 	MerchantCode saveMerchantCode(String siteId, Short paymentProcessorId, String merchantID);
 	
 	FuelCode findFuelCode(String code);
-	
-	FuelCode findEFSFuelCode(int code);
-
-	FuelCode findComdataFuelCode(String code);
 	
 	void saveFuelCodes(List<FuelCode> codes);
 	

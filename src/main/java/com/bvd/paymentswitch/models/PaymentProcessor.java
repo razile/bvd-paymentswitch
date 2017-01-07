@@ -45,7 +45,7 @@ public class PaymentProcessor {
 	private String unitOfMeasure;
 	
 	
-	@OneToMany(fetch=FetchType.EAGER)
+	@OneToMany(fetch=FetchType.LAZY)
 	@JoinColumn(name="PAYMENTPROCESSOR_ID")
 	private List<BinPaymentProcessor> bins;
 	
