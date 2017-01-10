@@ -9,6 +9,7 @@ import com.bvd.paymentswitch.models.PaymentProcessor;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
+import com.bvd.paymentswitch.web.service.models.fuelcard.CompletedAuthorization;
 
 import java.util.List;
 import java.util.concurrent.Future;
@@ -36,16 +37,19 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private final PaymentProcessorRepository paymentProcessorRepository;
 	private final MerchantCodeRepository merchantCodeRepository;
 	private final FuelCodeRepository fuelCodeRepository;
+	private final CompletedAuthorizationRepository completedAuthRepository;
 	
 	public AuthorizationServiceImpl(POSAuthorizationRepository kardallRepository, ProcessorAuthorizationRepository processorRepository,
 									BinPaymentProcessorRepository binRepository,PaymentProcessorRepository paymentProcessorRepository,
-									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository) {
+									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository, 
+									CompletedAuthorizationRepository completedAuthRepository) {
 		this.kardallRepository = kardallRepository;
 		this.processorRepository = processorRepository;
 		this.binRepository = binRepository;
 		this.paymentProcessorRepository = paymentProcessorRepository;
 		this.merchantCodeRepository = merchantCodeRepository;
 		this.fuelCodeRepository = fuelCodeRepository;
+		this.completedAuthRepository = completedAuthRepository;
 	}
 	
 	
@@ -166,6 +170,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	public ProcessorAuthorization findProcessorAuthorization(String invoiceNumber, String cardNumber, String unitNumber, String type, String responseCode) {
 		return processorRepository.findByInvoiceNumberAndCardNumberAndUnitNumberAndTypeAndResponseCode(invoiceNumber, cardNumber, unitNumber, type, responseCode);
 	}
+
+
+	@Override
+	public Iterable<CompletedAuthorization> getCompletedAuthorizations() {
+		return completedAuthRepository.findAll();
+	}
+	
+	
 	
 	
 

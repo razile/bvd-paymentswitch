@@ -10,6 +10,7 @@ import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.PaymentProcessor;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
+import com.bvd.paymentswitch.web.service.models.fuelcard.CompletedAuthorization;
 
 public interface AuthorizationService {
 	
@@ -34,4 +35,6 @@ public interface AuthorizationService {
 	void saveFuelCodes(List<FuelCode> codes);
 	
 	ProcessorAuthorization findProcessorAuthorization(String invoiceNumber, String cardNumber, String unitNumber, String type, String responseCode);
+
+	Iterable<CompletedAuthorization> getCompletedAuthorizations();
 }
