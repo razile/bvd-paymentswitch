@@ -34,6 +34,7 @@ public class CompletedAuthorization {
 	private String companyNumber;
 	private String accountNumber;
 
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
 	private Timestamp processedDateTime;
 
 	private String authorizationCode;
