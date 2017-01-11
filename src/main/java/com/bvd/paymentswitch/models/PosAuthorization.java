@@ -14,9 +14,15 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 @Entity
+@Table(name="pos_authorization",
+indexes = {@Index(name="idx_pos_invoice", columnList="trn_no", unique=false),
+			@Index(name="idx_pos_create_ts", columnList="create_timestamp",unique=false) 
+			})
 public class PosAuthorization {
 
 	@Id
@@ -44,7 +50,7 @@ public class PosAuthorization {
 	@Column(length=16,nullable=false)
 	private String authId;
 	
-	@Column(length=16,nullable=false)
+	@Column(name="trn_no",length=16,nullable=false)
 	private String trnNo;
 	
 	@Column(length=16)
@@ -175,6 +181,7 @@ public class PosAuthorization {
 	@Column(length=64)
 	private String track2Data;
 	
+	@Column(name="create_timestamp")
 	private Timestamp createTimestamp;
 	
 	// the following are comdata specific fields - they need to get added to the Kardall request

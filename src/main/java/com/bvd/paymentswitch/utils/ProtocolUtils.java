@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 
@@ -112,6 +113,13 @@ public class ProtocolUtils {
 		ZonedDateTime ts = ZonedDateTime.now(utcZone);
 		return Timestamp.valueOf(ts.toLocalDateTime());
 	}
+	
+	public static Timestamp getUTCTimestampOffset(long daysToOffset) {
+		ZonedDateTime ts = ZonedDateTime.now(utcZone);
+		ts = ts.minus(daysToOffset, ChronoUnit.DAYS);
+		return Timestamp.valueOf(ts.toLocalDateTime());
+	}
+	
 	
 	
 	public static boolean checkDigit(String request) {

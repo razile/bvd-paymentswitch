@@ -1,16 +1,18 @@
 package com.bvd.paymentswitch.jpa.service;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
+import com.bvd.paymentswitch.models.CompletedAuthorization;
 import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.PaymentProcessor;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
+import com.bvd.paymentswitch.models.RejectedAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
-import com.bvd.paymentswitch.web.service.models.fuelcard.CompletedAuthorization;
 
 public interface AuthorizationService {
 	
@@ -36,5 +38,7 @@ public interface AuthorizationService {
 	
 	ProcessorAuthorization findProcessorAuthorization(String invoiceNumber, String cardNumber, String unitNumber, String type, String responseCode);
 
-	Iterable<CompletedAuthorization> getCompletedAuthorizations();
+	List<CompletedAuthorization> getCompletedAuthorizations(Timestamp startTS, Timestamp endTS, String type);
+	
+	List<RejectedAuthorization> getRejectedAuthorizations(Timestamp startTS, Timestamp endTS);
 }

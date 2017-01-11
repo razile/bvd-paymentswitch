@@ -1,12 +1,16 @@
-package com.bvd.paymentswitch.web.service.models.fuelcard;
+package com.bvd.paymentswitch.models;
+
+import java.sql.Timestamp;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Immutable;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -17,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 @Entity
 @Table(name = "completed_authorizations")
 @Immutable
+@IdClass(AuthPK.class)
 public class CompletedAuthorization {
 
 	
@@ -29,13 +34,13 @@ public class CompletedAuthorization {
 	private String companyNumber;
 	private String accountNumber;
 
-	private String processedDate;
-	private String processedTime;
+	private Timestamp processedDateTime;
 
-	@Id
 	private String authorizationCode;
-	private String transactionDate;
-	private String transactionTime;
+	
+	@Id
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+	private Timestamp transactionDateTime;
 	private String payFlag;
 	private String merchantNumber;
 	private String cardNumber;
@@ -77,6 +82,8 @@ public class CompletedAuthorization {
 	
 	private String siteCurrency;
 	private String billCurrency;
+	
+	@Id
 	private String siteInvoiceNumber;
 	private String cardSwiped;
 
@@ -112,20 +119,12 @@ public class CompletedAuthorization {
 		this.accountNumber = accountNumber;
 	}
 
-	public String getProcessedDate() {
-		return processedDate;
+	public Timestamp getProcessedDateTime() {
+		return processedDateTime;
 	}
 
-	public void setProcessedDate(String processedDate) {
-		this.processedDate = processedDate;
-	}
-
-	public String getProcessedTime() {
-		return processedTime;
-	}
-
-	public void setProcessedTime(String processedTime) {
-		this.processedTime = processedTime;
+	public void setProcessedDate(Timestamp processedDateTime) {
+		this.processedDateTime = processedDateTime;
 	}
 
 	public String getAuthorizationCode() {
@@ -136,21 +135,14 @@ public class CompletedAuthorization {
 		this.authorizationCode = authorizationCode;
 	}
 
-	public String getTransactionDate() {
-		return transactionDate;
+	public Timestamp getTransactionDateTime() {
+		return transactionDateTime;
 	}
 
-	public void setTransactionDate(String transactionDate) {
-		this.transactionDate = transactionDate;
+	public void setTransactionDateTime(Timestamp transactionDateTime) {
+		this.transactionDateTime = transactionDateTime;
 	}
 
-	public String getTransactionTime() {
-		return transactionTime;
-	}
-
-	public void setTransactionTime(String transactionTime) {
-		this.transactionTime = transactionTime;
-	}
 
 	public String getPayFlag() {
 		return payFlag;

@@ -28,7 +28,7 @@ public class MerchantCodePK implements Serializable {
 	public boolean equals(Object object) {
 		   if (object instanceof MerchantCodePK) {
 			   MerchantCodePK pk = (MerchantCodePK)object;
-	            return paymentProcessorId.shortValue() == pk.paymentProcessorId.shortValue() && siteId.equals(siteId);
+	            return paymentProcessorId.shortValue() == pk.paymentProcessorId.shortValue() && siteId.equals(pk.siteId);
 	        } else {
 	            return false;
 	        }

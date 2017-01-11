@@ -1,16 +1,18 @@
 package com.bvd.paymentswitch.jpa.service;
 
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
+import com.bvd.paymentswitch.models.CompletedAuthorization;
 import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.MerchantCodePK;
 import com.bvd.paymentswitch.models.PaymentProcessor;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
+import com.bvd.paymentswitch.models.RejectedAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
-import com.bvd.paymentswitch.web.service.models.fuelcard.CompletedAuthorization;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -38,11 +40,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private final MerchantCodeRepository merchantCodeRepository;
 	private final FuelCodeRepository fuelCodeRepository;
 	private final CompletedAuthorizationRepository completedAuthRepository;
+	private final RejectedAuthorizationRepository rejectedAuthRepository;
 	
 	public AuthorizationServiceImpl(POSAuthorizationRepository kardallRepository, ProcessorAuthorizationRepository processorRepository,
 									BinPaymentProcessorRepository binRepository,PaymentProcessorRepository paymentProcessorRepository,
 									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository, 
-									CompletedAuthorizationRepository completedAuthRepository) {
+									CompletedAuthorizationRepository completedAuthRepository, RejectedAuthorizationRepository rejectedAuthRepository) {
 		this.kardallRepository = kardallRepository;
 		this.processorRepository = processorRepository;
 		this.binRepository = binRepository;
@@ -50,6 +53,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		this.merchantCodeRepository = merchantCodeRepository;
 		this.fuelCodeRepository = fuelCodeRepository;
 		this.completedAuthRepository = completedAuthRepository;
+		this.rejectedAuthRepository = rejectedAuthRepository;
 	}
 	
 	
@@ -173,8 +177,35 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 
 	@Override
-	public Iterable<CompletedAuthorization> getCompletedAuthorizations() {
-		return completedAuthRepository.findAll();
+	public List<CompletedAuthorization> getCompletedAuthorizations(Timestamp startTS, Timestamp endTS, String type) {
+		
+		if (startTS != null) {
+			if (endTS != null) {
+				return  (type.equalsIgnoreCase("transaction")?
+						completedAuthRepository.findByTransactionDateTimeBetween(startTS, endTS):
+						completedAuthRepository.findByProcessedDateTimeBetween(startTS, endTS));			
+			} else {
+				return  (type.equalsIgnoreCase("transaction")?
+						completedAuthRepository.findByTransactionDateTimeAfter(startTS):
+						completedAuthRepository.findByProcessedDateTimeAfter(startTS));
+			} 
+		} else {
+			return (List<CompletedAuthorization>) completedAuthRepository.findAll();
+		}
+	}
+
+
+	@Override
+	public List<RejectedAuthorization> getRejectedAuthorizations(Timestamp startTS, Timestamp endTS) {
+		if (startTS != null) {
+			if (endTS != null) {
+				return  rejectedAuthRepository.findByTransactionDateTimeBetween(startTS, endTS);			
+			} else {
+				return rejectedAuthRepository.findByTransactionDateTimeAfter(startTS);
+			} 
+		} else {
+			return (List<RejectedAuthorization>) rejectedAuthRepository.findAll();
+		}
 	}
 	
 	
