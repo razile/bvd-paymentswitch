@@ -444,7 +444,7 @@ public class PosAuthorization {
 		setMessage(message);
 	}
 	
-	public void setReauthForComdata(String message) {
+	public void setReauth(String message) {
 		setAuthorization(0);
 		setReAuthorizationFlag(1);
 		setMessage(message);

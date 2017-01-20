@@ -29,17 +29,16 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
 		String target = posRequest.getFuelTarget();
 		
 		if (type.equals("PC")) {
-			// this is a pre-auth approval
-			posResponse.setAuthorized(processorResponse.getAuthorizationCode());
 			
 			if (processorResponse.getFuel() != null) {
 				String[] fuel;
 				if (target == null || target.equalsIgnoreCase("tractor")) {
 				   // set limits based on FUEL
 					fuel = processorResponse.getFuel().split(",");
+				} else if (processorResponse.getReeferLimit() != null) {
+					fuel = processorResponse.getReeferLimit().split(",");   
 				} else {
-				   // set limits based on RFR
-					fuel = processorResponse.getReeferLimit().split(","); 
+					fuel = new String[] {"0","0"};
 				}
 				String litres = fuel[0];
 				String dollars = fuel[1];
@@ -80,10 +79,7 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
 				}
 				
 			} else {
-				processorResponse.setMessage("Fuel Not Authorized");
-				processorResponse.setResponseCode("00050");
-				processorResponse.setErrorCode("00050");
-				posResponse.setDenied("00050", "Fuel Not Authorized");
+				fuelMatched = false;
 			}
 			
 			if (!fuelMatched) {
@@ -92,20 +88,27 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
 				processorResponse.setErrorCode("00050");
 				posResponse.setDenied("00050", "Fuel Not Authorized");			
 			} else {
+				// this is a pre-auth approval
+				posResponse.setAuthorized(processorResponse.getAuthorizationCode());
 				posResponse.setMessage(processorResponse.getMessage());
 				setPosPrompts(processorResponse, posResponse);
 			}
+			
     	} else if (type.equals("RC")) {
 			// this is a post-auth approval
     		posResponse.setAuthorized(processorResponse.getAuthorizationCode());	
     		posResponse.setAmount(processorResponse.getTotal());
     		posResponse.setMessage(processorResponse.getMessage());
 			
+    	} else if (type.equals("XC")) {
+    		// extended prompts
+    		posResponse.setReauth(processorResponse.getMessage());
+    		setPosPrompts(processorResponse, posResponse);
 		} else {
-			// this is a denial or extended prompts (XC)
+			// this is a denial 
 			String denialReason = ProtocolUtils.formatErrors(processorResponse.getErrorCode());
 			posResponse.setDenied(denialReason, processorResponse.getMessage()); 
-			setPosPrompts(processorResponse, posResponse);
+			
 		}
     	
 		

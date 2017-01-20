@@ -95,7 +95,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	public void sendUnitPromptResponse(ChannelHandlerContext ctx, PosAuthorization request) {
 		PosAuthorization response = new PosAuthorization(request);
 		response.setResponseFlags(request);
-		response.setReauthForComdata("Unit Number Required");
+		response.setReauth("Unit Number Required");
 		response.addPrompt("M2", "L,X6");
 		
 		String resp = response.toString();

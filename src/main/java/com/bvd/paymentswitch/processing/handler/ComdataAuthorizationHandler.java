@@ -26,7 +26,7 @@ public class ComdataAuthorizationHandler extends AuthorizationHandler {
 		if (type.equals("SP00007")) {
 			// this was a pre-edit request
 			if (responseCode.equals("00000")) {
-				posResponse.setReauthForComdata("SP00014");
+				posResponse.setReauth("SP00014");
 				setPosPrompts(processorResponse, posResponse);
 			} else {
 				posResponse.setDenied(responseCode, processorResponse.getMessage());
