@@ -1,5 +1,7 @@
 package com.bvd.paymentswitch.processing.handler;
 
+import java.math.BigDecimal;
+
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -23,28 +25,42 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
 		posResponse.setResponseFlags(posRequest);
     	
     	String type = processorResponse.getType();
+		boolean fuelMatched = false;
+		String target = posRequest.getFuelTarget();
 		
 		if (type.equals("PC")) {
 			// this is a pre-auth approval
 			posResponse.setAuthorized(processorResponse.getAuthorizationCode());
 			
 			if (processorResponse.getFuel() != null) {
-				// set limits based on FUEL
-				String[] fuel = processorResponse.getFuel().split(",");
+				String[] fuel;
+				if (target == null || target.equalsIgnoreCase("tractor")) {
+				   // set limits based on FUEL
+					fuel = processorResponse.getFuel().split(",");
+				} else {
+				   // set limits based on RFR
+					fuel = processorResponse.getReeferLimit().split(","); 
+				}
 				String litres = fuel[0];
 				String dollars = fuel[1];
-				if (litres.equals("0")) {
-					posResponse.setDollarLimit(ProtocolUtils.getBigDecimal(dollars,2));
-				} else {
-					posResponse.setVolumeLimit(ProtocolUtils.getBigDecimal(litres,3));
-				}
+				BigDecimal litVal = ProtocolUtils.getBigDecimal(litres,3);
+				BigDecimal dolVal = ProtocolUtils.getBigDecimal(dollars,2);
+				
+				if ( (litVal != null && litVal.floatValue() > 0) || (dolVal != null && dolVal.floatValue() > 0) ) {
+					fuelMatched = true;
+					if (litres.equals("0")) {
+						posResponse.setDollarLimit(dolVal);
+					} else {
+						posResponse.setVolumeLimit(litVal);
+					}
+				} 
 				
 			} else if (processorResponse.getFuelLimit() != null) {
 				// set limits based on FLMT
 				String[] flmt = processorResponse.getFuelLimit().split("/");
 				// need to check this against fuel types
 				FuelCode fc = posRequest.getFuelCode();
-				boolean fuelMatched = false;
+			
 				if (fc != null) {
 					for (int i=0; i < flmt.length; i++) {
 						String[] fuel = flmt[i].split(",");
@@ -63,16 +79,22 @@ public class PriorPostAuthorizationHandler extends AuthorizationHandler {
 					}
 				}
 				
-				if (!fuelMatched) {
-					posResponse.setDollarLimit(processorResponse.getTotal());
-				}
-
 			} else {
-				posResponse.setDollarLimit(processorResponse.getTotal());
+				processorResponse.setMessage("Fuel Not Authorized");
+				processorResponse.setResponseCode("00050");
+				processorResponse.setErrorCode("00050");
+				posResponse.setDenied("00050", "Fuel Not Authorized");
 			}
-			posResponse.setMessage(processorResponse.getMessage());
-			setPosPrompts(processorResponse, posResponse);
 			
+			if (!fuelMatched) {
+				processorResponse.setMessage("Fuel Not Authorized");
+				processorResponse.setResponseCode("00050");
+				processorResponse.setErrorCode("00050");
+				posResponse.setDenied("00050", "Fuel Not Authorized");			
+			} else {
+				posResponse.setMessage(processorResponse.getMessage());
+				setPosPrompts(processorResponse, posResponse);
+			}
     	} else if (type.equals("RC")) {
 			// this is a post-auth approval
     		posResponse.setAuthorized(processorResponse.getAuthorizationCode());	

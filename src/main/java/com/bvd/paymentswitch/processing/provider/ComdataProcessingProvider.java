@@ -135,6 +135,8 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			String fuelQuantityLimit = "0000000";
 			
 			int productType =  posRequest.getFuelCode().getProductType();
+			
+			
 			switch (productType) {
 				case 0:
 					if ("20004".equals(purchaseCategory)) {

@@ -82,6 +82,7 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		processorResponse.setAuthorizationCode(tokens.get("AUTH"));
 		processorResponse.setFuel(tokens.get("FUEL"));
 		processorResponse.setFuelLimit(tokens.get("FLMT"));
+		processorResponse.setReeferLimit(tokens.get("RFR"));
 		if (tokens.get("TOTL") != null) processorResponse.setTotal(ProtocolUtils.getBigDecimal(tokens.get("TOTL"),2));
 
 		processorResponse.setErrorCode(tokens.get("ERCD"));

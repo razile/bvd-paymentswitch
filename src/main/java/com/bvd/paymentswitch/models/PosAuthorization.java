@@ -195,6 +195,9 @@ public class PosAuthorization {
 	@Column(length=16) 		// will use P5 for this element
 	private String trailerHours;
 	
+	@Column(length=16)
+	private String fuelTarget;
+	
 	// end of comdata fields
 	
 	@Transient
@@ -216,6 +219,7 @@ public class PosAuthorization {
 		this.trnNo = request.trnNo;
 		this.reqId = request.reqId;
 		this.fuelCode = request.getFuelCode();
+		this.fuelTarget = request.fuelTarget;
 		
 		//this.transactionType = request.getTransactionType();
 		//this.source = source;
@@ -319,6 +323,7 @@ public class PosAuthorization {
 		this.driversLicenseState = xmlFields.get("P3");
 		this.trailerHubReading = xmlFields.get("P4");
 		this.trailerHours = xmlFields.get("P5");
+		this.fuelTarget = xmlFields.get("FT");
 	}
 
 	@Override
@@ -343,6 +348,7 @@ public class PosAuthorization {
 		ProtocolUtils.createXmlField("N1", this.pin, fields);
 		ProtocolUtils.createXmlField("EM", this.emailTrigger, fields);
 		ProtocolUtils.createXmlField("F1", this.fuelType, fields);
+		ProtocolUtils.createXmlField("FT", this.fuelTarget, fields);
 		ProtocolUtils.createXmlField("H1", this.hoseNumber, fields);
 		ProtocolUtils.createXmlField("L2", this.propaneLicense, fields);
 		ProtocolUtils.createXmlField("MG", this.message, fields);
@@ -956,6 +962,16 @@ public class PosAuthorization {
 	public void setTrailerHours(String trailerHours) {
 		this.trailerHours = trailerHours;
 	}
+
+	public String getFuelTarget() {
+		return fuelTarget;
+	}
+
+	public void setFuelTarget(String fuelTarget) {
+		this.fuelTarget = fuelTarget;
+	}
+	
+	
 	
 	
 }

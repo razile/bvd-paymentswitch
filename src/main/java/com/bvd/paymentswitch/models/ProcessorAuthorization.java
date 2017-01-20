@@ -136,6 +136,9 @@ public class ProcessorAuthorization {
 	@Column(length=16) 		
 	private String trailerHours;
 	
+	@Column(length=256) 
+	private String reeferLimit;
+	
 	// end of comdata fields
 	
 	@Column(name="create_timestamp")
@@ -519,6 +522,19 @@ public class ProcessorAuthorization {
 	public void setTrailerHours(String trailerHours) {
 		this.trailerHours = trailerHours;
 	}
+
+
+
+	public String getReeferLimit() {
+		return reeferLimit;
+	}
+
+
+
+	public void setReeferLimit(String reeferLimit) {
+		this.reeferLimit = reeferLimit;
+	}
+	
 	
 	
 
