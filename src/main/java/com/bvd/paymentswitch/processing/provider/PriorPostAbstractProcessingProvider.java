@@ -113,8 +113,8 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		processorRequest.setCardToken(posRequest.getTrack2Data());
 		processorRequest.setPosCurrency("CAD"); // canadian funds
 		processorRequest.setRegisterIndicator("C"); // transaction originated from card reader
-		processorRequest.setVersionNumber("01.10");
-		processorRequest.setCount(1);
+		processorRequest.setVersionNumber(paymentProcessor.getVersionNumber());   // 01.10
+ 		processorRequest.setCount(1);
 
 		// prompts
 		processorRequest.setDriverID(posRequest.getDriverId());

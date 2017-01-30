@@ -38,6 +38,9 @@ public class PaymentProcessor {
 	
 	@Column(length=16,nullable=false)
 	private String softwareSystem;
+	
+	@Column(length=8) 
+	private String versionNumber;
 
 	@Column(length=16)
 	private String language;
@@ -138,6 +141,14 @@ public class PaymentProcessor {
 
 	public void setBins(List<BinPaymentProcessor> bins) {
 		this.bins = bins;
+	}
+
+	public String getVersionNumber() {
+		return versionNumber;
+	}
+
+	public void setVersionNumber(String versionNumber) {
+		this.versionNumber = versionNumber;
 	}
 	
 	

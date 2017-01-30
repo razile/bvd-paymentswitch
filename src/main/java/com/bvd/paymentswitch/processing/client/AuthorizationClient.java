@@ -58,7 +58,7 @@ public class AuthorizationClient {
 	            // write the request
 	            String request = provider.formatProcessorRequest(processorRequest);
 	            
-	            logger.debug("SEND: " + request);
+	            // logger.debug("SEND: " + request);
 	            ch.writeAndFlush(request);
 
 	            // Wait for the server to close the connection.
