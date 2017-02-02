@@ -11,6 +11,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ import com.jb.proxy.response.PaymentResponse;
 @RequestMapping("/paymentProxy")
 public class ProxyController {
 
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.POST, value="/{resId}")
 	public @ResponseBody PaymentResponse proxyRequest(@RequestBody PaymentRequest request, @PathVariable String resId, HttpServletRequest context) {
 		
