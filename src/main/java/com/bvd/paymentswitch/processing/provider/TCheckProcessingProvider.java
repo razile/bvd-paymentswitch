@@ -36,20 +36,20 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 		if (sellingPrice != null) {
 			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +",1,1";
 			processorRequest.setFuel(fuelToken);
-		}
-		
-		if (fuelType == 4194304) {
-			String def = this.getPaymentProcessor().getDefIndicator();
-			if (def != null) {
-				if (def.equalsIgnoreCase("DISP")) {
-					BigDecimal maxVol = ProtocolUtils.getBigDecimal("200.000", 3);
-					BigDecimal maxDoll = maxVol.multiply(sellingPrice);
-					maxDoll = maxDoll.setScale(2, RoundingMode.HALF_UP);
-					String dToken = "DEF," + sellingPrice + "," + maxVol + "," + maxDoll + ",L,I";
-					processorRequest.setDispensed(dToken);				
-				} else if (def.equalsIgnoreCase("MERC")) {
-					String mToken = "DE:1,200.00";
-					processorRequest.setMerchandise(mToken);
+			
+			if (fuelType == 4194304) {
+				String def = this.getPaymentProcessor().getDefIndicator();
+				if (def != null) {
+					if (def.equalsIgnoreCase("DISP")) {
+						BigDecimal maxVol = ProtocolUtils.getBigDecimal("200.000", 3);
+						BigDecimal maxDoll = maxVol.multiply(sellingPrice);
+						maxDoll = maxDoll.setScale(2, RoundingMode.HALF_UP);
+						String dToken = "DEF," + sellingPrice + "," + maxVol + "," + maxDoll + ",L,I";
+						processorRequest.setDispensed(dToken);				
+					} else if (def.equalsIgnoreCase("MERC")) {
+						String mToken = "DE:1,200.00";
+						processorRequest.setMerchandise(mToken);
+					}
 				}
 			}
 		}
