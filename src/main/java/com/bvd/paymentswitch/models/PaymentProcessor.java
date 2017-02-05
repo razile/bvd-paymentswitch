@@ -47,6 +47,9 @@ public class PaymentProcessor {
 	@Column(length=16)
 	private String unitOfMeasure;
 	
+	@Column(length=8)
+	private String defIndicator;
+	
 	
 	@OneToMany(fetch=FetchType.LAZY)
 	@JoinColumn(name="PAYMENTPROCESSOR_ID")
@@ -150,9 +153,13 @@ public class PaymentProcessor {
 	public void setVersionNumber(String versionNumber) {
 		this.versionNumber = versionNumber;
 	}
-	
-	
 
-	
+	public String getDefIndicator() {
+		return defIndicator;
+	}
 
+	public void setDefIndicator(String defIndicator) {
+		this.defIndicator = defIndicator;
+	}
+	
 }

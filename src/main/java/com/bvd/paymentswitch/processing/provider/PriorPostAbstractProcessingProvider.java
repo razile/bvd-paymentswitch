@@ -2,7 +2,6 @@ package com.bvd.paymentswitch.processing.provider;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
 
-import java.math.BigDecimal;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +21,11 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 	
 	public abstract String getCardKey();
 	public abstract String getCardValue(ProcessorAuthorization processorRequest);
+	
+	public abstract void setPreAuthFuelTokens(PosAuthorization posRequest, ProcessorAuthorization processorRequest);
+	public abstract void setPostAuthFuelTokens(PosAuthorization posRequest, ProcessorAuthorization processorRequest);
+
+	
 	
 	
 	@Override 
@@ -127,30 +131,22 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		processorRequest.setTrip(posRequest.getTripNumber());
 		processorRequest.setVehiclePlateNumber(posRequest.getTruckNumber());
 
-		BigDecimal sellingPrice = posRequest.getSellingPrice();
-		int fuelType = posRequest.getFuelCode().getEfsCode(); 
+
 		// specific tokens by lifecycle
 		if (transType == 0) {
 			// this is a prior
 			processorRequest.setType("IC");
 			processorRequest.setCustomerInformation("I");
 			
-			if (sellingPrice != null) {
-				String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +",1,1";
-				processorRequest.setFuel(fuelToken);
-			}
+			setPreAuthFuelTokens(posRequest, processorRequest);
+			
 		} else {
 			// this is a post (completed transaction)
 			processorRequest.setType("AC");
 			processorRequest.setAuthorizationCode(posRequest.getAuthId().trim());
 			processorRequest.setCustomerInformation("I");
 			
-			BigDecimal quantity = posRequest.getQuantityNet();
-			BigDecimal amount = posRequest.getAmount();
-
-			String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + ",1,1";
-			processorRequest.setTotal(amount);
-			processorRequest.setFuel(fuelToken);
+		    setPostAuthFuelTokens(posRequest, processorRequest);
 		}
 
 		return processorRequest;
@@ -181,6 +177,9 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		ProtocolUtils.createToken("FUEL", processorRequest.getFuel(), tokens);
 		ProtocolUtils.createToken("FLMT", processorRequest.getFuelLimit(), tokens);
 		if (processorRequest.getTotal() != null) ProtocolUtils.createToken("TOTL", processorRequest.getTotal().toPlainString(), tokens);
+		
+		ProtocolUtils.createToken("DISP", processorRequest.getDispensed(), tokens);
+		ProtocolUtils.createToken("MERC", processorRequest.getMerchandise(), tokens);
 		
 		ProtocolUtils.createToken("HBRD", processorRequest.getHubReading(), tokens);
 		ProtocolUtils.createToken("TRLR", processorRequest.getTrailerNumber(), tokens);

@@ -125,6 +125,12 @@ public class ProcessorAuthorization {
 	@Column(name="response_code",length=5) 
 	private String responseCode;
 	
+	@Column(length=64) 
+	private String dispensed;
+	
+	@Column(length=64)
+	private String merchandise;
+	
 	// the following are comdata specific fields
 	
 	@Column(length=16)    
@@ -534,9 +540,29 @@ public class ProcessorAuthorization {
 	public void setReeferLimit(String reeferLimit) {
 		this.reeferLimit = reeferLimit;
 	}
-	
-	
-	
 
 
+
+	public String getDispensed() {
+		return dispensed;
+	}
+
+
+
+	public void setDispensed(String dispensed) {
+		this.dispensed = dispensed;
+	}
+
+
+
+	public String getMerchandise() {
+		return merchandise;
+	}
+
+
+
+	public void setMerchandise(String merchandise) {
+		this.merchandise = merchandise;
+	}
+	
 }

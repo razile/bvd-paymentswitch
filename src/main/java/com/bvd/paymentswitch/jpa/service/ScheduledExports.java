@@ -16,17 +16,17 @@ public class ScheduledExports {
 
 	 static final Logger logger = LoggerFactory.getLogger(ScheduledExports.class);
 	 
-	 @Autowired
-	 private AuthorizationService authService;
+//	 @Autowired
+//	 private AuthorizationService authService;
 		
 	 @Value("${card.export.dir}")
 	 private String cardExportDir;
 	
 	 
-	 @Scheduled(fixedRate=50000)
+/*	 @Scheduled(fixedRate=500000)
 	 public void exportBVDCards() {
 		 logger.info("Starting BVD card export to " + cardExportDir + " at {}", new Date());
-	 }
+	 }*/
 	 
 	 
 	 
