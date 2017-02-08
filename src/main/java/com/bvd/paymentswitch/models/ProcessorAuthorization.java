@@ -131,6 +131,13 @@ public class ProcessorAuthorization {
 	@Column(length=64)
 	private String merchandise;
 	
+	@Column(precision=11,scale=2)
+	private BigDecimal nonCADVTotal;	
+	
+	@Column(precision=11,scale=3)
+	private BigDecimal sellingPrice;
+	
+	
 	// the following are comdata specific fields
 	
 	@Column(length=16)    
@@ -564,5 +571,32 @@ public class ProcessorAuthorization {
 	public void setMerchandise(String merchandise) {
 		this.merchandise = merchandise;
 	}
+
+
+
+	public BigDecimal getNonCADVTotal() {
+		return nonCADVTotal;
+	}
+
+
+
+	public void setNonCADVTotal(BigDecimal nonCADVTotal) {
+		this.nonCADVTotal = nonCADVTotal;
+	}
+
+
+
+	public BigDecimal getSellingPrice() {
+		return sellingPrice;
+	}
+
+
+
+	public void setSellingPrice(BigDecimal sellingPrice) {
+		this.sellingPrice = sellingPrice;
+	}
+
+
+	
 	
 }

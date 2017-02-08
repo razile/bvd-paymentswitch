@@ -2,6 +2,8 @@ package com.bvd.paymentswitch.processing.client;
 
 
 
+import javax.inject.Provider;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
@@ -26,6 +28,9 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
     private ChannelHandlerContext posCtx;
     private PosAuthorization posRequest;
     private ProcessingProvider provider;
+    
+	@Autowired
+	private Provider<AuthorizationHandler> authHandlerProvider;
     
 	@Autowired
 	@Qualifier("sslClientContext")
@@ -60,8 +65,15 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 		
       
         // add the handler class containing processing business logic
-        p.addLast(provider.getAuthorizationHandler(posRequest, posCtx));
+        p.addLast(authorizationHandler(posRequest, provider, posCtx));
     }
 	
     
+	
+	public AuthorizationHandler authorizationHandler(PosAuthorization posRequest, ProcessingProvider provider, ChannelHandlerContext posCtx) {
+		AuthorizationHandler handler = authHandlerProvider.get();
+		handler.initializePOSContext(posRequest, provider, posCtx);
+		return handler;
+	}
+	
 }

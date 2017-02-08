@@ -1,22 +1,19 @@
 package com.bvd.paymentswitch.processing.provider;
 
+import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 
+import java.math.BigDecimal;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
-import com.bvd.paymentswitch.processing.handler.AuthorizationHandler;
-import com.bvd.paymentswitch.processing.handler.PriorPostAuthorizationHandler;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
-
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
+
 public abstract class PriorPostAbstractProcessingProvider extends AbstractProcessingProvider {
 	
 	public abstract String getCardKey();
@@ -24,7 +21,8 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 	
 	public abstract void setPreAuthFuelTokens(PosAuthorization posRequest, ProcessorAuthorization processorRequest);
 	public abstract void setPostAuthFuelTokens(PosAuthorization posRequest, ProcessorAuthorization processorRequest);
-
+	
+	public abstract boolean setFuelLimit(BigDecimal maxVolume, BigDecimal maxAmount, BigDecimal sellingPrice, PosAuthorization posResponse, ProcessorAuthorization processorResponse);
 	
 	
 	
@@ -33,14 +31,6 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		return ASCIIChars.ETX_DELIMITER;
 	}
 	
-	@Override
-	public AuthorizationHandler getAuthorizationHandler(PosAuthorization posRequest, ChannelHandlerContext posCtx) {
-		// TODO Auto-generated method stub
-		AuthorizationHandler handler = new PriorPostAuthorizationHandler();
-		handler.initializePOSContext(posRequest, this, posCtx);
-		return handler;
-	}
-
 	@Override
 	public ProcessorAuthorization parseProcessorResponse(PosAuthorization posRequest, String response) {
 		ProcessorAuthorization processorResponse = new ProcessorAuthorization();
@@ -87,8 +77,10 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		processorResponse.setFuel(tokens.get("FUEL"));
 		processorResponse.setFuelLimit(tokens.get("FLMT"));
 		processorResponse.setReeferLimit(tokens.get("RFR"));
+		
 		if (tokens.get("TOTL") != null) processorResponse.setTotal(ProtocolUtils.getBigDecimal(tokens.get("TOTL"),2));
-
+		if (tokens.get("NCDV") != null) processorResponse.setNonCADVTotal(ProtocolUtils.getBigDecimal(tokens.get("NCDV"),2));
+		
 		processorResponse.setErrorCode(tokens.get("ERCD"));
 		processorResponse.setPrint(tokens.get("PRNT"));
 		processorResponse.setMessage(tokens.get("MSG"));		
@@ -176,6 +168,8 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 	
 		ProtocolUtils.createToken("FUEL", processorRequest.getFuel(), tokens);
 		ProtocolUtils.createToken("FLMT", processorRequest.getFuelLimit(), tokens);
+
+		if (processorRequest.getSellingPrice() != null) ProtocolUtils.createToken("PPRC", processorRequest.getSellingPrice().toPlainString(), tokens);
 		if (processorRequest.getTotal() != null) ProtocolUtils.createToken("TOTL", processorRequest.getTotal().toPlainString(), tokens);
 		
 		ProtocolUtils.createToken("DISP", processorRequest.getDispensed(), tokens);
@@ -201,6 +195,174 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		msg = msg.substring(0, msg.length()-1);  // strip off the last | 
 	
 		return msg;
+	}
+	
+	@Override
+	public PosAuthorization createPosResponse(PosAuthorization posRequest, ProcessorAuthorization processorResponse) {
+		PosAuthorization posResponse = new PosAuthorization(posRequest);
+		posResponse.setResponseFlags(posRequest);
+    	
+    	String type = processorResponse.getType();
+		boolean fuelMatched = false;
+		String target = posRequest.getFuelTarget();
+		
+		if (type.equals("PC")) {
+	
+			if (processorResponse.getFuel() != null) {
+				String[] fuel;
+				if (target == null || target.equalsIgnoreCase("tractor")) {
+				   // set limits based on FUEL
+					fuel = processorResponse.getFuel().split(",");
+				} else if (processorResponse.getReeferLimit() != null) {
+					fuel = processorResponse.getReeferLimit().split(",");   
+				} else {
+					fuel = new String[] {"0","0"};
+				}
+				String litres = fuel[0];
+				String dollars = fuel[1];
+				BigDecimal maxQuantityLimit = ProtocolUtils.getBigDecimal(litres,3);
+				BigDecimal maxDollarLimit = ProtocolUtils.getBigDecimal(dollars,2);
+				
+				fuelMatched = setFuelLimit(maxQuantityLimit, maxDollarLimit, posRequest.getSellingPrice(), posResponse, processorResponse);
+				
+				
+			} else if (processorResponse.getFuelLimit() != null) {
+				// set limits based on FLMT
+				String[] flmt = processorResponse.getFuelLimit().split("/");
+				// need to check this against fuel types
+				FuelCode fc = posRequest.getFuelCode();
+			
+				if (fc != null) {
+					for (int i=0; i < flmt.length; i++) {
+						String[] fuel = flmt[i].split(",");
+						int fuelType = Integer.parseInt(fuel[0]);
+						if (fuelType == fc.getEfsCode()) {
+							String litres = fuel[1];
+							String dollars = fuel[2];
+							BigDecimal maxQuantityLimit = ProtocolUtils.getBigDecimal(litres,3);
+							BigDecimal maxDollarLimit = ProtocolUtils.getBigDecimal(dollars,2);
+							fuelMatched = setFuelLimit(maxQuantityLimit, maxDollarLimit, posRequest.getSellingPrice(), posResponse, processorResponse);
+							break;
+						}
+					}
+				}
+				
+			} else {
+				fuelMatched = false;
+			}
+			
+			if (!fuelMatched) {
+				processorResponse.setMessage("Fuel Not Authorized");
+				processorResponse.setResponseCode("00050");
+				processorResponse.setErrorCode("00050");
+				posResponse.setDenied("00050", "Fuel Not Authorized");			
+			} else {
+				// this is a pre-auth approval
+				posResponse.setAuthorized(processorResponse.getAuthorizationCode());
+				posResponse.setMessage(processorResponse.getMessage());
+				setPosPrompts(processorResponse, posResponse);
+			}
+			
+    	} else if (type.equals("RC")) {
+			// this is a post-auth approval
+    		posResponse.setAuthorized(processorResponse.getAuthorizationCode());	
+    		posResponse.setAmount(processorResponse.getTotal());
+    		posResponse.setMessage(processorResponse.getMessage());
+			
+    	} else if (type.equals("XC")) {
+    		// extended prompts
+    		posResponse.setReauth(processorResponse.getMessage());
+    		setPosPrompts(processorResponse, posResponse);
+		} else {
+			// this is a denial 
+			String denialReason = ProtocolUtils.formatErrors(processorResponse.getErrorCode());
+			posResponse.setDenied(denialReason, processorResponse.getMessage()); 
+			
+		}
+    	
+		
+    	if (processorResponse.getPrint() != null) {
+    		posResponse.setReceiptTrailer(processorResponse.getPrint());
+    		posResponse.setReceiptTrailerFlag(1);
+    	} else {
+    		posResponse.setReceiptTrailerFlag(0);
+    	}
+    	
+    	return posResponse;
+	}
+	
+	@Override
+	public void setPosPrompts(ProcessorAuthorization processorResponse, PosAuthorization posResponse) {
+		posResponse.addPrompt("L1", formatPosPrompt(processorResponse.getDriversLicenseNumber()));
+		posResponse.addPrompt("M2", formatPosPrompt(processorResponse.getUnitNumber()));
+		posResponse.addPrompt("M3", formatPosPrompt(processorResponse.getVehiclePlateNumber()));
+		posResponse.addPrompt("M6", formatPosPrompt(processorResponse.getPoNumber()));
+		posResponse.addPrompt("TN", formatPosPrompt(processorResponse.getTrailerNumber()));
+		posResponse.addPrompt("O1", formatPosPrompt(processorResponse.getOdometerReading() ));
+		posResponse.addPrompt("P1", formatPosPrompt(processorResponse.getHubReading()));
+		posResponse.addPrompt("P2", formatPosPrompt(processorResponse.getTrip()));
+		posResponse.addPrompt("DI", formatPosPrompt(processorResponse.getDriverID()));
+	}
+
+	@Override
+	public String formatPosPrompt(String processorValue) {
+		if (processorValue != null) {
+			String formattedValue = null;
+			
+			String minValue = null;
+			String exactValue = null;
+			String maxValue = null;
+			
+			boolean isDataVal = false;
+			boolean isExact = false;
+			boolean hasMin = false;
+			boolean hasMax = false;
+			
+			String[] masks = processorValue.split(";");
+			
+			for (String mask:masks) {
+					
+				if (mask.equals("TN")) {
+					isDataVal = true;
+				}
+				
+				if (mask.startsWith("X")) {
+					hasMax = true;
+					maxValue = mask;
+				}
+				
+				if (mask.startsWith("M")) {
+					hasMin = true;
+					minValue = mask;
+				}
+				
+				if (mask.startsWith("V")) {
+					isExact = true;
+					isDataVal = true;
+					exactValue = mask.substring(1);
+				}
+			}
+			
+			if (isDataVal) {
+				formattedValue = "V,";
+			} else {
+				formattedValue = "L,";
+			}
+			
+			if (hasMin && hasMax) {
+				formattedValue += minValue + ":" + maxValue;
+			} else if (hasMin) {
+				formattedValue += minValue;
+			} else if (hasMax) {
+				formattedValue += maxValue;
+			} else if (isExact) {
+				formattedValue += exactValue;
+			}
+			
+			return formattedValue;
+		} else {
+			return null;
+		}
 	}
 
 

@@ -9,15 +9,12 @@ import org.slf4j.LoggerFactory;
 import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
-import com.bvd.paymentswitch.processing.handler.AuthorizationHandler;
-import com.bvd.paymentswitch.processing.handler.ComdataAuthorizationHandler;
 import com.bvd.paymentswitch.protocol.ComdataDecoder;
 import com.bvd.paymentswitch.protocol.ComdataEncoder;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
 
 public class ComdataProcessingProvider extends AbstractProcessingProvider {
 
@@ -34,13 +31,6 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		decoder = new ComdataDecoder();
 	}
 
-	@Override
-	public AuthorizationHandler getAuthorizationHandler(PosAuthorization posRequest, ChannelHandlerContext posCtx) {
-		// TODO Auto-generated method stub
-		AuthorizationHandler handler = new ComdataAuthorizationHandler();
-		handler.initializePOSContext(posRequest, this, posCtx);
-		return handler;
-	}
 
 	@Override
 	public ProcessorAuthorization parseProcessorResponse(PosAuthorization posRequest, String response) {
@@ -299,20 +289,6 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		
 		} else {
 			
-			processorRequest.setTrailerHubReading("150000");
-			processorRequest.setTrailerHours("2000");
-			
-			String card = processorRequest.getCardNumber();
-			if (card != null) {
-				if (card.endsWith("3812") || card.endsWith("3838")) {
-					processorRequest.setDriversLicenseState("OH");
-				} else {
-					processorRequest.setDriversLicenseState("ON");
-				}
-			}
-			
-			
-			
 			msg += "00085" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getDriverID() 
 					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
 					+ fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getTrailerHours() + fs +  processorRequest.getTrip() 
@@ -394,6 +370,77 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		}
 
 		return processorRequest;
+	}
+
+	@Override
+	public PosAuthorization createPosResponse(PosAuthorization posRequest, ProcessorAuthorization processorResponse) {
+		PosAuthorization posResponse = new PosAuthorization(posRequest);
+		posResponse.setResponseFlags(posRequest);
+    	
+    	String type = processorResponse.getType();
+    	String responseCode = processorResponse.getResponseCode();
+		
+		if (type.equals("SP00007")) {
+			// this was a pre-edit request
+			if (responseCode.equals("00000")) {
+				posResponse.setReauth("SP00014");
+				setPosPrompts(processorResponse, posResponse);
+			} else {
+				posResponse.setDenied(responseCode, processorResponse.getMessage());
+			}
+			
+    	} else if (type.equals("SP00014")) {
+    		if (responseCode.equals("00000")) {
+				posResponse.setAuthorized(processorResponse.getInvoiceNumber());
+				posResponse.setDollarLimit(processorResponse.getTotal());
+			} else {
+				posResponse.setDenied(responseCode, processorResponse.getMessage());
+			}
+			
+    	} else if (type.equals("SP00011")) {
+    		if (responseCode.equals("00000")) {
+				posResponse.setAuthorized(processorResponse.getAuthorizationCode());
+				posResponse.setAmount(processorResponse.getTotal());
+				posResponse.setMessage(processorResponse.getMessage());
+			} else {
+				posResponse.setDenied(responseCode, processorResponse.getMessage());
+			}
+    		
+		} else {
+			// this is a failed transaction
+			posResponse.setDenied(responseCode, processorResponse.getMessage()); 
+		}
+    	
+		
+    	if (processorResponse.getPrint() != null) {
+    		posResponse.setReceiptTrailer(processorResponse.getPrint());
+    		posResponse.setReceiptTrailerFlag(1);
+    	} else {
+    		posResponse.setReceiptTrailerFlag(0);
+    	}
+    	
+    	return posResponse;
+	}
+
+	@Override
+	public void setPosPrompts(ProcessorAuthorization processorResponse, PosAuthorization posResponse) {
+		posResponse.addPrompt("L1", formatPosPrompt(processorResponse.getDriversLicenseNumber()));
+		posResponse.addPrompt("M3", formatPosPrompt(processorResponse.getVehiclePlateNumber()));
+		posResponse.addPrompt("M6", formatPosPrompt(processorResponse.getPoNumber()));
+		posResponse.addPrompt("TN", formatPosPrompt(processorResponse.getTrailerNumber()));
+		posResponse.addPrompt("O1", formatPosPrompt(processorResponse.getOdometerReading() ));
+		posResponse.addPrompt("P1", formatPosPrompt(processorResponse.getHubReading()));
+		posResponse.addPrompt("P2", formatPosPrompt(processorResponse.getTrip()));
+		posResponse.addPrompt("DI", formatPosPrompt(processorResponse.getDriverID()));
+		posResponse.addPrompt("P3", formatPosPrompt(processorResponse.getDriversLicenseState()));
+		posResponse.addPrompt("P4", formatPosPrompt(processorResponse.getTrailerHubReading()));
+		posResponse.addPrompt("P5", formatPosPrompt(processorResponse.getTrailerHours()));
+		
+	}
+
+	@Override
+	public String formatPosPrompt(String processorValue) {
+		return processorValue;
 	}
 
 }

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.bvd.paymentswitch.processing.handler;
+package com.bvd.paymentswitch.processing.client;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
@@ -27,8 +27,14 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-public abstract class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
+@Component
+@Qualifier("authorizationHandler")
+@Scope("prototype")
+public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
 
 	static final Logger logger = LoggerFactory.getLogger(AuthorizationHandler.class);
 	static final Logger responseLogger = LoggerFactory.getLogger("Response-Logger");
@@ -37,17 +43,12 @@ public abstract class AuthorizationHandler extends SimpleChannelInboundHandler<S
 	protected PosAuthorization posRequest;
 	protected ProcessingProvider processingProvider;
 	
-
 	
 	public void initializePOSContext(PosAuthorization posRequest, ProcessingProvider processingProvider, ChannelHandlerContext posCtx) {
 		this.posCtx = posCtx;
 		this.posRequest = posRequest;
 		this.processingProvider = processingProvider;
 	}
-	
-
-	public abstract void handleResponse(ProcessorAuthorization processorResponse);
-	public abstract String formatPosPrompt(String processorValue);
 	
 	
 
@@ -61,7 +62,14 @@ public abstract class AuthorizationHandler extends SimpleChannelInboundHandler<S
     	
     	processingProvider.saveProcessorAuthorization(processorResponse);
     	
-    	handleResponse(processorResponse);
+    	PosAuthorization posResponse = processingProvider.createPosResponse(posRequest, processorResponse);
+    	
+    	String bvdResp = posResponse.toString();
+    	logger.debug("SEND: " + bvdResp);
+    	posCtx.write(bvdResp);
+
+ 		// close the channel once the content is fully written
+    	posCtx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     	
     	if (processingProvider.getPaymentProcessor().isClientDisconnect()) {
     		ctx.close();

@@ -33,7 +33,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	static final Logger requestLogger = LoggerFactory.getLogger("Request-Persistence-Logger");
 	static final Logger responseLogger = LoggerFactory.getLogger("Response-Persistence-Logger");
 	
-	private final POSAuthorizationRepository kardallRepository;
+	private final POSAuthorizationRepository posRepository;
 	private final ProcessorAuthorizationRepository processorRepository;
 	private final BinPaymentProcessorRepository binRepository;
 	private final PaymentProcessorRepository paymentProcessorRepository;
@@ -42,11 +42,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private final CompletedAuthorizationRepository completedAuthRepository;
 	private final RejectedAuthorizationRepository rejectedAuthRepository;
 	
-	public AuthorizationServiceImpl(POSAuthorizationRepository kardallRepository, ProcessorAuthorizationRepository processorRepository,
+	public AuthorizationServiceImpl(POSAuthorizationRepository posRepository, ProcessorAuthorizationRepository processorRepository,
 									BinPaymentProcessorRepository binRepository,PaymentProcessorRepository paymentProcessorRepository,
 									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository, 
 									CompletedAuthorizationRepository completedAuthRepository, RejectedAuthorizationRepository rejectedAuthRepository) {
-		this.kardallRepository = kardallRepository;
+		this.posRepository = posRepository;
 		this.processorRepository = processorRepository;
 		this.binRepository = binRepository;
 		this.paymentProcessorRepository = paymentProcessorRepository;
@@ -63,7 +63,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		
 		try {
 			k.setCreateTimestamp(ProtocolUtils.getUTCTimestamp());
-			k = kardallRepository.save(k);
+			k = posRepository.save(k);
 		} catch (Exception e) {
 			// write to a file if failed
 			logger.error("Unable to persist KardallHostAuthorization for Trn: " + k.getTrnNo() + ", Error: " +  e.getMessage());
@@ -205,6 +205,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			} 
 		} else {
 			return (List<RejectedAuthorization>) rejectedAuthRepository.findAll();
+		}
+	}
+
+
+	@Override
+	public String getFuelCodeForAuthorization(String authId, Timestamp ts) {
+		try  {
+			return posRepository.findByAuthIdAndDateTime(authId, ts);
+		} catch (Exception e) {
+			return null;
 		}
 	}
 	

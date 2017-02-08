@@ -1,6 +1,7 @@
 package com.bvd.paymentswitch.processing.provider;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
@@ -49,6 +50,39 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 		String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + ",1,1";
 		processorRequest.setTotal(amount);
 		processorRequest.setFuel(fuelToken);
+		processorRequest.setSellingPrice(sellingPrice);
+	}
+
+
+	@Override
+	public boolean setFuelLimit(BigDecimal maxVolume, BigDecimal maxAmount, BigDecimal sellingPrice, PosAuthorization posResponse,ProcessorAuthorization processorResponse) {
+		boolean fuelMatched = false;
+		BigDecimal maxByNCDV = processorResponse.getNonCADVTotal();
+		BigDecimal comparator = null;
+		BigDecimal maxLimit = null;
+		
+		if (maxVolume != null && maxVolume.floatValue() > 0) {
+			comparator = (maxVolume.multiply(sellingPrice)).setScale(2, RoundingMode.FLOOR);
+			fuelMatched=true;
+		} else if (maxAmount != null &&  maxAmount.floatValue() > 0) {
+			comparator = maxAmount;
+			fuelMatched = true;
+		} else {
+			fuelMatched = false;
+		}
+		
+		
+		if (fuelMatched) {
+			if (maxByNCDV != null) {
+				maxLimit = (comparator.compareTo(maxByNCDV) < 0) ? comparator:maxByNCDV;
+			} else {
+				maxLimit = comparator;
+			}
+			posResponse.setDollarLimit(maxLimit);
+		}
+		
+		return fuelMatched;
+		
 	}
 
 }

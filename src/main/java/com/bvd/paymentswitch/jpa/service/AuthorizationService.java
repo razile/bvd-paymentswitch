@@ -41,4 +41,6 @@ public interface AuthorizationService {
 	List<CompletedAuthorization> getCompletedAuthorizations(Timestamp startTS, Timestamp endTS, String type);
 	
 	List<RejectedAuthorization> getRejectedAuthorizations(Timestamp startTS, Timestamp endTS);
+	
+	String getFuelCodeForAuthorization(String authId, Timestamp ts);
 }

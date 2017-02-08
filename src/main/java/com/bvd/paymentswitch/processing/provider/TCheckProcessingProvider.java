@@ -2,7 +2,6 @@ package com.bvd.paymentswitch.processing.provider;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.protocol.PrePostEncoder;
@@ -41,13 +40,13 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 				String def = this.getPaymentProcessor().getDefIndicator();
 				if (def != null) {
 					if (def.equalsIgnoreCase("DISP")) {
-						BigDecimal maxVol = ProtocolUtils.getBigDecimal("200.000", 3);
+						BigDecimal maxVol = ProtocolUtils.getBigDecimal("100.000", 3);
 						BigDecimal maxDoll = maxVol.multiply(sellingPrice);
 						maxDoll = maxDoll.setScale(2, RoundingMode.HALF_UP);
 						String dToken = "DEF," + sellingPrice + "," + maxVol + "," + maxDoll + ",L,I";
 						processorRequest.setDispensed(dToken);				
 					} else if (def.equalsIgnoreCase("MERC")) {
-						String mToken = "DE:1,200.00";
+						String mToken = "DE:1,100.00";
 						processorRequest.setMerchandise(mToken);
 					}
 				}
@@ -81,6 +80,32 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 			}
 		}
 		
+	}
+	
+
+
+	@Override
+	public boolean setFuelLimit(BigDecimal maxVolume, BigDecimal maxAmount, BigDecimal sellingPrice,
+			PosAuthorization posResponse, ProcessorAuthorization processorResponse) {
+		boolean fuelMatched = false;
+		BigDecimal maxLimit = null;
+		
+		if (maxVolume != null && maxVolume.floatValue() > 0) {
+			maxLimit = (maxVolume.multiply(sellingPrice)).setScale(2, RoundingMode.FLOOR);
+			fuelMatched=true;
+		} else if (maxAmount != null &&  maxAmount.floatValue() > 0) {
+			maxLimit = maxAmount;
+			fuelMatched = true;
+		} else {
+			fuelMatched = false;
+		}
+		
+		
+		if (fuelMatched) {
+			posResponse.setDollarLimit(maxLimit);
+		}
+		
+		return fuelMatched;
 	}
 
 }
