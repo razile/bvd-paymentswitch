@@ -336,7 +336,7 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 					minValue = mask;
 				}
 				
-				if (mask.startsWith("V")) {
+				if (mask.startsWith("V") || mask.startsWith("L")) {
 					isExact = true;
 					isDataVal = true;
 					exactValue = mask.substring(1);
