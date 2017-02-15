@@ -121,7 +121,7 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		processorRequest.setTrailerNumber(posRequest.getTrailerNumber());
 		processorRequest.setHubReading(posRequest.getHubometer());
 		processorRequest.setTrip(posRequest.getTripNumber());
-		processorRequest.setVehiclePlateNumber(posRequest.getTruckNumber());
+		processorRequest.setVehiclePlateNumber(posRequest.getVehiclePlateNumber());
 
 
 		// specific tokens by lifecycle
@@ -295,7 +295,7 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 	public void setPosPrompts(ProcessorAuthorization processorResponse, PosAuthorization posResponse) {
 		posResponse.addPrompt("L1", formatPosPrompt(processorResponse.getDriversLicenseNumber()));
 		posResponse.addPrompt("M2", formatPosPrompt(processorResponse.getUnitNumber()));
-		posResponse.addPrompt("M3", formatPosPrompt(processorResponse.getVehiclePlateNumber()));
+		posResponse.addPrompt("L3", formatPosPrompt(processorResponse.getVehiclePlateNumber()));
 		posResponse.addPrompt("M6", formatPosPrompt(processorResponse.getPoNumber()));
 		posResponse.addPrompt("TN", formatPosPrompt(processorResponse.getTrailerNumber()));
 		posResponse.addPrompt("O1", formatPosPrompt(processorResponse.getOdometerReading() ));

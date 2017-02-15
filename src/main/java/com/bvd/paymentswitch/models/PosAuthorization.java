@@ -195,10 +195,15 @@ public class PosAuthorization {
 	@Column(length=16) 		// will use P5 for this element
 	private String trailerHours;
 	
+	// end of comdata fields
+	
 	@Column(length=16)
 	private String fuelTarget;
 	
-	// end of comdata fields
+	
+	@Column(length=16)
+	private String vehiclePlateNumber;
+	
 	
 	@Transient
 	private Map<String,String> prompts;
@@ -292,6 +297,7 @@ public class PosAuthorization {
 		this.misc = xmlFields.get("M1");
 		this.unitNumber = xmlFields.get("M2");
 		this.truckNumber = xmlFields.get("M3");
+		this.vehiclePlateNumber = xmlFields.get("L3");
 		this.dipReading = xmlFields.get("M4");
 		this.temperature = xmlFields.get("M5");
 		this.poNumber = xmlFields.get("M6");
@@ -366,6 +372,7 @@ public class PosAuthorization {
 			ProtocolUtils.createXmlField("L1", this.driversLicense, fields);
 			ProtocolUtils.createXmlField("M2", this.unitNumber, fields);
 			ProtocolUtils.createXmlField("M3", this.truckNumber, fields);
+			ProtocolUtils.createXmlField("L3", this.vehiclePlateNumber, fields);
 			ProtocolUtils.createXmlField("M6", this.poNumber, fields);
 			ProtocolUtils.createXmlField("TN", this.trailerNumber, fields);
 			ProtocolUtils.createXmlField("O1", this.odometer, fields);
@@ -970,6 +977,16 @@ public class PosAuthorization {
 	public void setFuelTarget(String fuelTarget) {
 		this.fuelTarget = fuelTarget;
 	}
+
+	public String getVehiclePlateNumber() {
+		return vehiclePlateNumber;
+	}
+
+	public void setVehiclePlateNumber(String vehiclePlateNumber) {
+		this.vehiclePlateNumber = vehiclePlateNumber;
+	}
+	
+	
 	
 	
 	
