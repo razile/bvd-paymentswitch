@@ -70,13 +70,14 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	private void parseSP11(ProcessorAuthorization processorResponse, String reply) {
 		if (processorResponse.getResponseCode().equals("00000")) {
 			// good response
+			int indexOfMsg = reply.indexOf("OK:");
 			int indexOfAuth = reply.indexOf("CTL#");
 			int indexOfAmount = reply.indexOf("$");
-			int indexOfTax = reply.indexOf("TAX");
 			
 			
 			if (indexOfAuth > -1) {
-				String authCode = reply.substring(indexOfAuth + 4, indexOfAuth + 10).trim();
+				int endIndex = ((indexOfAuth + 10) <= reply.length())?indexOfAuth+10:reply.length();
+				String authCode = reply.substring(indexOfAuth + 4, endIndex).trim();
 				processorResponse.setAuthorizationCode(authCode);
 			}
 			
@@ -86,11 +87,12 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 				processorResponse.setTotal(ProtocolUtils.getBigDecimal(amount, 2));
 			}
 			
-			if (indexOfTax > -1) {
-				int endIndex = ((indexOfTax + 13) <= reply.length())?indexOfTax+13:reply.length();
-				String message = reply.substring(indexOfTax, endIndex).trim();
-				processorResponse.setMessage(message);
-			} 
+			if (indexOfMsg > -1) {
+				int endIndex = ((indexOfMsg + 98) <= reply.length())?indexOfMsg+98:reply.length();
+				String msg = reply.substring(indexOfMsg+18, endIndex).trim();
+				processorResponse.setMessage(msg);
+			}
+			
 
 			
 		} else {
@@ -400,6 +402,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
     	} else if (type.equals("SP00011")) {
     		if (responseCode.equals("00000")) {
 				posResponse.setAuthorized(processorResponse.getAuthorizationCode());
+				posResponse.setComdataCTL(processorResponse.getAuthorizationCode());
 				posResponse.setAmount(processorResponse.getTotal());
 				posResponse.setMessage(processorResponse.getMessage());
 			} else {

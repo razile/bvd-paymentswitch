@@ -210,6 +210,9 @@ public class PosAuthorization {
 	
 	@Transient
 	private FuelCode fuelCode;
+	
+	@Transient
+	private String comdataCTL;
 
 	public PosAuthorization() {
 		super();
@@ -402,6 +405,7 @@ public class PosAuthorization {
 		ProtocolUtils.createXmlField("TD", this.totalizingDollars, fields);
 		ProtocolUtils.createXmlField("TE", this.trainingExclusion, fields);
 		ProtocolUtils.createXmlField("TV", this.totalizerVolume, fields);
+		ProtocolUtils.createXmlField("CL", this.comdataCTL, fields);
 		
 		for (String s: fields) {
 			msg += s;
@@ -454,7 +458,7 @@ public class PosAuthorization {
 	public void setReauth(String message) {
 		setAuthorization(0);
 		setReAuthorizationFlag(1);
-		setMessage(message);
+		//setMessage(message);
 	}
 	
 	
@@ -985,10 +989,14 @@ public class PosAuthorization {
 	public void setVehiclePlateNumber(String vehiclePlateNumber) {
 		this.vehiclePlateNumber = vehiclePlateNumber;
 	}
-	
-	
-	
-	
+
+	public String getComdataCTL() {
+		return comdataCTL;
+	}
+
+	public void setComdataCTL(String comdataCTL) {
+		this.comdataCTL = comdataCTL;
+	}
 	
 	
 }
