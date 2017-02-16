@@ -29,12 +29,18 @@ public class ProtocolUtils {
 		
 		if (field == null || field.length() < 2) return null;
 		
-		String key =  field.substring(0,2);
-		String value = field.substring(2);
+		String key =  sanitize(field.substring(0,2));
+		String value = sanitize(field.substring(2));
 		
 		if (value == null || value.isEmpty()) return null;
 		
 		return new AbstractMap.SimpleEntry<String, String>(key, value);	
+	}
+	
+	public static String sanitize(String s) {
+		if (s == null) return null;
+		s = s.trim();
+		return s;
 	}
 	
 	public static void createXmlField(String key, String value, List<String> fields) {
