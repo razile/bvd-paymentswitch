@@ -33,7 +33,13 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 		BigDecimal sellingPrice = posRequest.getSellingPrice();
 		int fuelType = posRequest.getFuelCode().getEfsCode(); 
 		if (sellingPrice != null) {
-			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +",1,1";
+			String fuelUse = "1";
+			String target = posRequest.getFuelTarget();
+			if (target != null && target.equalsIgnoreCase("trailer")) {
+				fuelUse = "2";
+			}
+			
+			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +"," + fuelUse + ",1";
 			processorRequest.setFuel(fuelToken);
 		}
 
@@ -46,8 +52,15 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 		BigDecimal sellingPrice = posRequest.getSellingPrice();
 		BigDecimal quantity = posRequest.getQuantityNet();
 		BigDecimal amount = posRequest.getAmount();
+		
+		String fuelUse = "1";
+		String target = posRequest.getFuelTarget();
+		if (target != null && target.equalsIgnoreCase("trailer")) {
+			fuelUse = "2";
+		}
+		
+		String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + "," + fuelUse + ",1";
 
-		String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + ",1,1";
 		processorRequest.setTotal(amount);
 		processorRequest.setFuel(fuelToken);
 		processorRequest.setSellingPrice(sellingPrice);
