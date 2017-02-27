@@ -36,7 +36,9 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 			String fuelUse = "1";
 			String target = posRequest.getFuelTarget();
 			if (target != null && target.equalsIgnoreCase("trailer")) {
-				fuelUse = "2";
+				if (fuelType != 4194304) {
+					fuelUse = "2";	
+				}
 			}
 			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +"," + fuelUse + ",1";
 			processorRequest.setFuel(fuelToken);
@@ -55,7 +57,9 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 		String fuelUse = "1";
 		String target = posRequest.getFuelTarget();
 		if (target != null && target.equalsIgnoreCase("trailer")) {
-			fuelUse = "2";
+			if (fuelType != 4194304) {
+				fuelUse = "2";	
+			}
 		}
 		
 		String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + "," + fuelUse + ",1";

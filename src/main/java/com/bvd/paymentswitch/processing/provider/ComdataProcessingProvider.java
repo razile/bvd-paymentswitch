@@ -262,29 +262,54 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			msg += "00036" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber();
 		} else if (report.equalsIgnoreCase("SP00011")) {
 			
+			String cardToken = processorRequest.getCardToken();
+			if (cardToken != null) {
+				int maxIndex = cardToken.length();
+				int calcIndex = cardToken.indexOf("=") + 5;
+				int endIndex = (calcIndex > maxIndex)?maxIndex:calcIndex;
+				
+				cardToken = cardToken.substring(0, endIndex);
+			}
+			
 			FuelCode fc = processorRequest.getFuelCode();
-			msg += "00048" + fs + "A" + processorRequest.getCardToken() + fs + processorRequest.getUnitNumber() 
-			+ fs + fs + fs + fs + processorRequest.getInvoiceNumber() + fs + processorRequest.getFuel() 
-			+ fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + processorRequest.getTotal() + fs  + processorRequest.getTrip() 
+			msg += "00048" + fs + "A" + cardToken + fs + processorRequest.getUnitNumber() 
+			+ fs + fs + fs + fs + processorRequest.getInvoiceNumber() + fs;
+			
+			switch (fc.getProductType()) {
+				case 0:
+					msg += fs + fs + fs + fs + processorRequest.getFuel() + fs + fs + fs + fs + fs + fs + fs;
+				case 1:
+					msg += fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs;
+				case 2:
+					msg += processorRequest.getFuel() + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs;
+				case 3:
+					msg += fs + fs + processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs;
+				default:
+					msg += fs + fs + fs + fs + processorRequest.getFuel() + fs + fs + fs + fs + fs + fs + fs;
+			}
+			
+			
+			
+			msg += processorRequest.getTotal() + fs  + processorRequest.getTrip() 
 			+ fs + processorRequest.getHubReading() + fs + fs + processorRequest.getDriversLicenseNumber() + fs + processorRequest.getDriversLicenseState()
 			+ fs + processorRequest.getTrailerNumber() + fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getPoNumber()
 			+ fs + processorRequest.getDriverID() + fs;  
 			
 			switch (fc.getProductType()) {
-				case 0:
-					msg += fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs ;
+				case 0:  // other fuels
+					msg += fs + fs + fs + fs + fs + processorRequest.getTrailerHours() + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs ;
 					break;
-				case 1:
-					msg += processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs ;
+				case 1:  // diesel 1
+					msg += processorRequest.getFuel()  + fs + fs + fs + fs + processorRequest.getTrailerHours() + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs ;
 					break;
-				case 2:
-					msg += fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs +  fs + fs + fs + fs + fs ;
+				case 2:  // deisel 2
+					msg += fs + fs + fs + fs + fs + processorRequest.getTrailerHours() + fs + fs + fc.getComdataCode() + fs +  fs + fs + fs + fs + fs ;
 					break;
-				case 3:
-					msg += fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs + fs ;
+				case 3:	// reefer
+					msg += fs + fs + fs + fs + fs + processorRequest.getTrailerHours() + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs + fs ;
 					break;
 				default:
-					msg += fs + fs + fs + fs + fs + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs ;
+					msg += fs + fs + fs + fs + fs + processorRequest.getTrailerHours() + fs + fs + fs + fs + fc.getComdataCode() + fs + fs + fs + fs ;
 					break;
 			}
 			
@@ -295,7 +320,8 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 					+ fs + processorRequest.getUnitNumber() + fs + processorRequest.getTrailerNumber() + fs + processorRequest.getHubReading()
 					+ fs + processorRequest.getTrailerHubReading() + fs + processorRequest.getTrailerHours() + fs +  processorRequest.getTrip() 
 					+ fs + processorRequest.getDriversLicenseNumber() + fs + processorRequest.getDriversLicenseState()
-					+ fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuelCode().getComdataCode();
+					+ fs + processorRequest.getPoNumber() + fs + "P" + fs +  processorRequest.getFuelCode().getComdataCode()
+					+ fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs;
 		}
 	
 		msg = msg.replace("null","");

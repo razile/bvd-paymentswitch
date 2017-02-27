@@ -6,7 +6,6 @@ import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.protocol.PrePostEncoder;
 import com.bvd.paymentswitch.protocol.STX_ETX_Decoder;
-import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvider {
 
@@ -32,18 +31,18 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 		
 		BigDecimal sellingPrice = posRequest.getSellingPrice();
 		int fuelType = posRequest.getFuelCode().getEfsCode(); 
-		
 		if (sellingPrice != null) {
 			String fuelUse = "1";
 			String target = posRequest.getFuelTarget();
 			if (target != null && target.equalsIgnoreCase("trailer")) {
-				fuelUse = "2";
+				if (fuelType != 4194304) {
+					fuelUse = "2";	
+				}
 			}
-			
 			String fuelToken = "1.000," + sellingPrice + ",0.00," + fuelType +"," + fuelUse + ",1";
 			processorRequest.setFuel(fuelToken);
 			
-			if (fuelType == 4194304) {
+		/*	if (fuelType == 4194304) {
 				String def = this.getPaymentProcessor().getDefIndicator();
 				if (def != null) {
 					if (def.equalsIgnoreCase("DISP")) {
@@ -56,8 +55,8 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 						String mToken = "DE:1,100.00";
 						processorRequest.setMerchandise(mToken);
 					}
-				}
-			}
+				} 
+			} */
 		}
 		
 	}
@@ -73,14 +72,16 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 		String fuelUse = "1";
 		String target = posRequest.getFuelTarget();
 		if (target != null && target.equalsIgnoreCase("trailer")) {
-			fuelUse = "2";
+			if (fuelType != 4194304) {
+				fuelUse = "2";	
+			}
 		}
 		
 		String fuelToken = quantity + "," + sellingPrice + "," + amount + "," + fuelType + "," + fuelUse + ",1";
 		processorRequest.setTotal(amount);
 		processorRequest.setFuel(fuelToken);
 		
-		if (fuelType == 4194304) {
+		/*if (fuelType == 4194304) {
 			String def = this.getPaymentProcessor().getDefIndicator();
 			if (def != null) {
 				if (def.equalsIgnoreCase("DISP")) {
@@ -91,7 +92,7 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 					processorRequest.setMerchandise(mToken);
 				}
 			}
-		}
+		}*/
 		
 	}
 	

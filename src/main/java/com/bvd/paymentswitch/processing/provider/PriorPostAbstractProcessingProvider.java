@@ -208,9 +208,37 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 		
 		if (type.equals("PC")) {
 	
-			if (processorResponse.getFuel() != null) {
+			FuelCode fc = posRequest.getFuelCode();
+			if (processorResponse.getFuelLimit() != null) {
+				// set limits based on FLMT
+				String[] flmt = processorResponse.getFuelLimit().split("/");
+				// need to check this against fuel types			
+				if (fc != null) {
+					for (int i=0; i < flmt.length; i++) {
+						String[] fuel = flmt[i].split(",");
+						int fuelType = Integer.parseInt(fuel[0]);
+						if (fuelType == fc.getEfsCode()) {
+							String[] fuelLimits;
+							if (target == null || target.equalsIgnoreCase("tractor") || fuelType == 4194304) {
+								fuelLimits = new String[] {fuel[1],fuel[2]};
+							} else if (processorResponse.getReeferLimit() != null) {
+								fuelLimits = processorResponse.getReeferLimit().split(","); 
+							} else {
+								fuelLimits = new String[] {"0","0"};
+							}
+							
+							String litres = fuelLimits[0];
+							String dollars = fuelLimits[1];
+							BigDecimal maxQuantityLimit = ProtocolUtils.getBigDecimal(litres,3);
+							BigDecimal maxDollarLimit = ProtocolUtils.getBigDecimal(dollars,2);
+							fuelMatched = setFuelLimit(maxQuantityLimit, maxDollarLimit, posRequest.getSellingPrice(), posResponse, processorResponse);
+							break;
+						}
+					}
+				}
+			} else if (processorResponse.getFuel() != null) {
 				String[] fuel;
-				if (target == null || target.equalsIgnoreCase("tractor")) {
+				if (target == null || target.equalsIgnoreCase("tractor") || fc.getEfsCode() == 4194304) {
 				   // set limits based on FUEL
 					fuel = processorResponse.getFuel().split(",");
 				} else if (processorResponse.getReeferLimit() != null) {
@@ -225,27 +253,6 @@ public abstract class PriorPostAbstractProcessingProvider extends AbstractProces
 				
 				fuelMatched = setFuelLimit(maxQuantityLimit, maxDollarLimit, posRequest.getSellingPrice(), posResponse, processorResponse);
 				
-				
-			} else if (processorResponse.getFuelLimit() != null) {
-				// set limits based on FLMT
-				String[] flmt = processorResponse.getFuelLimit().split("/");
-				// need to check this against fuel types
-				FuelCode fc = posRequest.getFuelCode();
-			
-				if (fc != null) {
-					for (int i=0; i < flmt.length; i++) {
-						String[] fuel = flmt[i].split(",");
-						int fuelType = Integer.parseInt(fuel[0]);
-						if (fuelType == fc.getEfsCode()) {
-							String litres = fuel[1];
-							String dollars = fuel[2];
-							BigDecimal maxQuantityLimit = ProtocolUtils.getBigDecimal(litres,3);
-							BigDecimal maxDollarLimit = ProtocolUtils.getBigDecimal(dollars,2);
-							fuelMatched = setFuelLimit(maxQuantityLimit, maxDollarLimit, posRequest.getSellingPrice(), posResponse, processorResponse);
-							break;
-						}
-					}
-				}
 				
 			} else {
 				fuelMatched = false;
