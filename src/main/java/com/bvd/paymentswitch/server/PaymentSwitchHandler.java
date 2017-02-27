@@ -58,9 +58,11 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 			String bin = request.getCard1().substring(0,6);
 			ProcessingProvider provider = authService.getProcessingProvider(bin);
 			
+			
 			if (provider == null) {
 				sendErrorResponse(ctx, request, "Unable to process card");
-			} else if (provider.getPaymentProcessor().getName().equalsIgnoreCase("COMDATA") && (request.getUnitNumber() == null || request.getUnitNumber().length() == 0)) {
+			} else if ((provider.getPaymentProcessor().getName().equalsIgnoreCase("COMDATA") || provider.getPaymentProcessor().getName().equalsIgnoreCase("T-CHEK"))
+					&& (request.getUnitNumber() == null || request.getUnitNumber().length() == 0)) {
 				sendUnitPromptResponse(ctx, request);
 			} else {
 				// authorize it
