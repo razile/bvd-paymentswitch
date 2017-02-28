@@ -121,5 +121,32 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 		
 		return fuelMatched;
 	}
+	
+	@Override
+	public boolean validatePOSRequest(PosAuthorization posRequest) {
+		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0
+				|| posRequest.getDriverId() == null || posRequest.getDriverId().trim().length() == 0) {
+			return false;
+		} 
+		
+		if (posRequest.getFuelTarget() != null && posRequest.getFuelTarget().equalsIgnoreCase("trailer")) {
+			if (posRequest.getTrailerNumber() == null || posRequest.getTrailerNumber().trim().length() == 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public void setRequiredPrompts(PosAuthorization posRequest, PosAuthorization posResponse) {
+		posResponse.addPrompt("M2", "L,X16");
+		posResponse.addPrompt("DI", "L,X16");
+		
+		if (posRequest.getFuelTarget() != null && posRequest.getFuelTarget().equalsIgnoreCase("trailer")) {
+			posResponse.addPrompt("TN", "L,X32");
+			
+		}
+		
+	}
 
 }

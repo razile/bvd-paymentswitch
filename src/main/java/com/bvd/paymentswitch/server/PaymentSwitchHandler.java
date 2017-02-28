@@ -61,9 +61,8 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 			
 			if (provider == null) {
 				sendErrorResponse(ctx, request, "Unable to process card");
-			} else if ((provider.getPaymentProcessor().getName().equalsIgnoreCase("COMDATA") || provider.getPaymentProcessor().getName().equalsIgnoreCase("T-CHEK"))
-					&& (request.getUnitNumber() == null || request.getUnitNumber().length() == 0)) {
-				sendUnitPromptResponse(ctx, request);
+			} else if (provider.validatePOSRequest(request) == false) {
+				sendRequiredPromptResponse(ctx, request, provider);
 			} else {
 				// authorize it
 				String merchantId = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
@@ -94,11 +93,12 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	}
 	
 	
-	public void sendUnitPromptResponse(ChannelHandlerContext ctx, PosAuthorization request) {
+	public void sendRequiredPromptResponse(ChannelHandlerContext ctx, PosAuthorization request, ProcessingProvider provider) {
 		PosAuthorization response = new PosAuthorization(request);
 		response.setResponseFlags(request);
-		response.setReauth("Unit Number Required");
-		response.addPrompt("M2", "L,X6");
+		response.setReauth("Required Fields Missing");
+		
+		provider.setRequiredPrompts(request, response);
 		
 		String resp = response.toString();
 		logger.debug("SEND: " + resp);

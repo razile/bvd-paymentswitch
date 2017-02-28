@@ -37,5 +37,9 @@ public interface ProcessingProvider {
 	
 	String formatPosPrompt(String processorValue);
 	
+	boolean validatePOSRequest(PosAuthorization posRequest);
+	
+	void setRequiredPrompts(PosAuthorization posRequest, PosAuthorization posResponse);
+	
 	
 }

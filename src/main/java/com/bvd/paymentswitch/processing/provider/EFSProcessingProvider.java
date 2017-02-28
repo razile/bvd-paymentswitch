@@ -100,5 +100,22 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 		return fuelMatched;
 		
 	}
+	
+	@Override
+	public boolean validatePOSRequest(PosAuthorization posRequest) {
+		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0
+				|| posRequest.getDriverId() == null || posRequest.getDriverId().trim().length() == 0) {
+			return false;
+		} else { 
+			return true;
+		}
+	}
+
+	@Override
+	public void setRequiredPrompts(PosAuthorization posRequest, PosAuthorization posResponse) {
+		posResponse.addPrompt("M2", "L,X16");
+		posResponse.addPrompt("DI", "L,X16");
+		
+	}
 
 }

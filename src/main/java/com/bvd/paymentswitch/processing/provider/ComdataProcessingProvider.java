@@ -234,7 +234,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (indicator.startsWith("N") || indicator.startsWith("O") || indicator.startsWith("X") || indicator.length() == 0) return null;
 		
 		if (indicator.startsWith("C")) {
-			return "L," + maxLength;
+			return "L,X" + maxLength;
 		} else if (indicator.startsWith("V") || indicator.startsWith("E"))  {
 			return "V," + ((data != null) ? data.trim():data);
 		} else if (indicator.startsWith("R")) {
@@ -470,6 +470,21 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	@Override
 	public String formatPosPrompt(String processorValue) {
 		return processorValue;
+	}
+
+	@Override
+	public boolean validatePOSRequest(PosAuthorization posRequest) {
+		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0) {
+			return false;
+		} else { 
+			return true;
+		}
+	}
+
+	@Override
+	public void setRequiredPrompts(PosAuthorization posRequest, PosAuthorization posResponse) {
+		posResponse.addPrompt("M2", "L,X6");
+		
 	}
 
 }
