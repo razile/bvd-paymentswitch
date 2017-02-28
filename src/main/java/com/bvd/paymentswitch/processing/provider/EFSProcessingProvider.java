@@ -103,12 +103,13 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 	
 	@Override
 	public boolean validatePOSRequest(PosAuthorization posRequest) {
-		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0
-				|| posRequest.getDriverId() == null || posRequest.getDriverId().trim().length() == 0) {
-			return false;
-		} else { 
-			return true;
-		}
+//		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0
+//				|| posRequest.getDriverId() == null || posRequest.getDriverId().trim().length() == 0) {
+//			return false;
+//		} else { 
+//			return true;
+//		}
+		return true;
 	}
 
 	@Override
