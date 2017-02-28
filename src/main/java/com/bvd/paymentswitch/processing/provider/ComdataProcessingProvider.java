@@ -278,14 +278,19 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 			switch (fc.getProductType()) {
 				case 0:
 					msg += fs + fs + fs + fs + processorRequest.getFuel() + fs + fs + fs + fs + fs + fs + fs;
+					break;
 				case 1:
 					msg += fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs;
+					break;
 				case 2:
 					msg += processorRequest.getFuel() + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs + fs;
+					break;
 				case 3:
 					msg += fs + fs + processorRequest.getFuel()  + fs + fs + fs + fs + fs + fs + fs + fs + fs;
+					break;
 				default:
 					msg += fs + fs + fs + fs + processorRequest.getFuel() + fs + fs + fs + fs + fs + fs + fs;
+					break;
 			}
 			
 			
