@@ -35,5 +35,7 @@ public class ComdataEncoder extends StringEncoder {
         CharBuffer cb = CharBuffer.wrap(message.toCharArray());
         ByteBuf bytes = ByteBufUtil.encodeString(ctx.alloc(), cb, ProtocolUtils.APP_CHARSET);
         out.add(bytes);
+        
+        logger.debug("COMDATA SEND: " + message);
     }
 }
