@@ -65,7 +65,7 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     	PosAuthorization posResponse = processingProvider.createPosResponse(posRequest, processorResponse);
     	
     	String bvdResp = posResponse.toString();
-    	logger.debug("SEND: " + bvdResp);
+    	//logger.debug("SEND: " + bvdResp);
     	posCtx.write(bvdResp);
 
  		// close the channel once the content is fully written
