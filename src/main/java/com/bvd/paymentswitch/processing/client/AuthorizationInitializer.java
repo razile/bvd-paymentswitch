@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -25,7 +24,6 @@ import io.netty.handler.ssl.SslContext;
 @Scope("prototype")
 public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> {
 
-    private ChannelHandlerContext posCtx;
     private PosAuthorization posRequest;
     private ProcessingProvider provider;
     
@@ -37,8 +35,7 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	private SslContext sslCtx;
 	
         
-    public void intializeContext(PosAuthorization request, ProcessingProvider provider, ChannelHandlerContext posCtx) {
-    	this.posCtx = posCtx;
+    public void intializeContext(PosAuthorization request, ProcessingProvider provider) {
     	this.posRequest = request;
     	this.provider = provider;
     }
@@ -65,14 +62,14 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 		
       
         // add the handler class containing processing business logic
-        p.addLast(authorizationHandler(posRequest, provider, posCtx));
+        p.addLast(authorizationHandler(posRequest, provider));
     }
 	
     
 	
-	public AuthorizationHandler authorizationHandler(PosAuthorization posRequest, ProcessingProvider provider, ChannelHandlerContext posCtx) {
+	public AuthorizationHandler authorizationHandler(PosAuthorization posRequest, ProcessingProvider provider) {
 		AuthorizationHandler handler = authHandlerProvider.get();
-		handler.initializePOSContext(posRequest, provider, posCtx);
+		handler.initializePOSContext(posRequest, provider);
 		return handler;
 	}
 	

@@ -20,8 +20,6 @@ import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -39,17 +37,19 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
 	static final Logger logger = LoggerFactory.getLogger(AuthorizationHandler.class);
 	static final Logger responseLogger = LoggerFactory.getLogger("Response-Logger");
 	
-	protected ChannelHandlerContext posCtx;
 	protected PosAuthorization posRequest;
 	protected ProcessingProvider processingProvider;
+	protected AuthorizationFuture authorizationFuture;
 	
 	
-	public void initializePOSContext(PosAuthorization posRequest, ProcessingProvider processingProvider, ChannelHandlerContext posCtx) {
-		this.posCtx = posCtx;
+	public void initializePOSContext(PosAuthorization posRequest, ProcessingProvider processingProvider) {
 		this.posRequest = posRequest;
 		this.processingProvider = processingProvider;
 	}
 	
+	public void setAuthorizationFuture(AuthorizationFuture authFuture) {
+		this.authorizationFuture = authFuture;
+	}
 	
 
 	@Override
@@ -65,11 +65,10 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     	PosAuthorization posResponse = processingProvider.createPosResponse(posRequest, processorResponse);
     	
     	String bvdResp = posResponse.toString();
-    	//logger.debug("SEND: " + bvdResp);
-    	posCtx.write(bvdResp);
-
- 		// close the channel once the content is fully written
-    	posCtx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+    	
+    	logger.debug("Auth Response Ready: " + bvdResp);
+    	
+    	authorizationFuture.set(bvdResp);
     	
     	if (processingProvider.getPaymentProcessor().isClientDisconnect()) {
     		ctx.close();
@@ -80,8 +79,7 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error(cause.getMessage());
-        posCtx.write(String.valueOf(ASCIIChars.NAK));
-		posCtx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        authorizationFuture.set(String.valueOf(ASCIIChars.NAK));
         ctx.close();
     }
 }

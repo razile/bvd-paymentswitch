@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 import com.bvd.paymentswitch.jpa.service.AuthorizationService;
 import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
+import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.client.AuthorizationClient;
+import com.bvd.paymentswitch.processing.client.AuthorizationFuture;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
@@ -19,6 +21,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import javax.inject.Provider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +32,9 @@ import org.slf4j.LoggerFactory;
 public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	static final Logger logger = LoggerFactory.getLogger(PaymentSwitchHandler.class);   
 	static final Logger requestLogger = LoggerFactory.getLogger("Request-Logger");
+	
 	@Autowired
-	@Qualifier("authorizationClient")
-	private AuthorizationClient authClient;
+	private Provider<AuthorizationClient> authClientProvider;
 	
 	@Autowired
 	private AuthorizationService authService;
@@ -73,7 +77,24 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 					FuelCode fc = authService.findFuelCode(request.getFuelType());
 					request.setFuelCode(fc);
 					try {
-						authClient.authorize(request, provider, merchantId, ctx);
+						AuthorizationClient client = authorizationClient(provider); 
+						client.connect(request, provider);
+						
+						ProcessorAuthorization processorRequest = provider.createProcessorRequest(request, merchantId);
+
+						// provider.saveProcessorAuthorization(processorRequest);
+						// write the request
+						String requestMsg = provider.formatProcessorRequest(processorRequest);
+						AuthorizationFuture authFuture = client.authorize(requestMsg);
+						
+						String resp = authFuture.get();
+						
+						logger.debug("Response ready to write...");
+						ctx.write(resp);
+				 		// close the channel once the content is fully written
+				    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+				    	
+				    	client.close();
 					} catch (Exception e) {
 						logger.debug(e.getMessage());
 						sendErrorResponse(ctx, request, "Error processing card");
@@ -90,6 +111,12 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	 		// close the channel once the content is fully written
 	    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 		}
+	}
+	
+	
+	public AuthorizationClient authorizationClient(ProcessingProvider provider) {
+		AuthorizationClient authClient = authClientProvider.get();
+		return authClient;
 	}
 	
 	
