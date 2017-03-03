@@ -87,6 +87,9 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 						String requestMsg = provider.formatProcessorRequest(processorRequest);
 						AuthorizationFuture authFuture = client.authorize(requestMsg);
 						
+						while (!authFuture.isDone()) {
+							Thread.sleep(10);
+						}
 						String resp = authFuture.get();
 						
 						logger.debug("Response ready to write...");

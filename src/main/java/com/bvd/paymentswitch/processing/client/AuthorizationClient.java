@@ -35,40 +35,27 @@ public class AuthorizationClient {
 	private Provider<AuthorizationInitializer> authInitProvider;
 	
 	private ChannelFuture channelFuture = null;
+	private EventLoopGroup group = null;
 
 
-	
-	public void connect(PosAuthorization posRequest, ProcessingProvider provider) throws Exception{
+	public void connect(PosAuthorization posRequest, ProcessingProvider provider) throws Exception {
 
-		EventLoopGroup group = new NioEventLoopGroup(1);
+		group = new NioEventLoopGroup(1);
 
-		try {
-			
-			PaymentProcessor p = provider.getPaymentProcessor();
-			Bootstrap b = new Bootstrap();
-            b.group(group)
-             .channel(NioSocketChannel.class)
-             .handler(authorizationInitializer(posRequest, provider));
-    		
-            // Make the connection attempt.
-            channelFuture = b.connect(p.getHost(),p.getPort());
-          //  ch = channelFuture.sync().channel();
-            
-            logger.debug("Connected to: " + p.getHost() + ":" + p.getPort());
-        } catch (Exception e) {
-			// logger.error(e.getMessage());
-        	if (channelFuture != null) channelFuture.channel().close();
-			throw e;
-		} finally {
-            // The connection is closed automatically on shutdown.
-            group.shutdownGracefully();
-		}
+		PaymentProcessor p = provider.getPaymentProcessor();
+		Bootstrap b = new Bootstrap();
+		b.group(group).channel(NioSocketChannel.class).handler(authorizationInitializer(posRequest, provider));
+
+		channelFuture = b.connect(p.getHost(), p.getPort());
+
+		logger.debug("Connected to: " + p.getHost() + ":" + p.getPort());
+
 	}
-	
 
 
 	public void close() {
-		channelFuture.channel().close();		
+		if (channelFuture != null) channelFuture.channel().close();	
+		if (group != null) group.shutdownGracefully();
 	}
 
 	
