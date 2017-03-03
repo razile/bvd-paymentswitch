@@ -92,7 +92,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 						}
 						String resp = authFuture.get();
 						
-						logger.debug("Response ready to write...");
+						// logger.debug("Response ready to write...");
 						ctx.write(resp);
 				 		// close the channel once the content is fully written
 				    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);

@@ -28,10 +28,12 @@ public class STX_ETX_Encoder extends StringEncoder {
        // }
         
         String message = msg.toString();
+        logger.debug("SEND: " + message);
+        
         message = ASCIIChars.STX + message + ASCIIChars.ETX;
         CharBuffer cb = CharBuffer.wrap(message.toCharArray());
         ByteBuf bytes = ByteBufUtil.encodeString(ctx.alloc(), cb, ProtocolUtils.APP_CHARSET);
         out.add(bytes);
-        logger.debug("SEND: " + message);
+       
     }
 }

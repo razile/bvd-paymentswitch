@@ -66,7 +66,7 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     	
     	String bvdResp = posResponse.toString();
     	
-    	logger.debug("Auth Response Ready: " + bvdResp);
+    	//logger.debug("Auth Response Ready: " + bvdResp);
     	
     	authorizationFuture.set(bvdResp);
     	
