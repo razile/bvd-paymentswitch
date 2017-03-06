@@ -133,7 +133,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 		provider.setRequiredPrompts(request, response);
 		
 		String resp = response.toString();
-		logger.debug("SEND: " + resp);
+		//logger.debug("SEND: " + resp);
 		ctx.write(resp);
  		// close the channel once the content is fully written
     	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
@@ -146,7 +146,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 		response.setDenied(error, null);
 		
 		String resp = response.toString();
-		logger.debug("SEND: " + resp);
+//		logger.debug("SEND: " + resp);
 		ctx.write(resp);
  		// close the channel once the content is fully written
     	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);

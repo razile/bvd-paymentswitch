@@ -22,6 +22,7 @@ import com.bvd.paymentswitch.utils.ASCIIChars;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.ReadTimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,14 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error(cause.getMessage());
+        logger.error(cause.toString());
+        
+        if (cause instanceof ReadTimeoutException) {
+        	PosAuthorization response = new PosAuthorization(posRequest);
+    		response.setResponseFlags(posRequest);
+    		response.setReauth("Processor Timeout");
+    		authorizationFuture.set(response.toString());
+        }
         authorizationFuture.set(String.valueOf(ASCIIChars.NAK));
         ctx.close();
     }

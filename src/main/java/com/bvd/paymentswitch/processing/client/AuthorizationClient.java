@@ -61,17 +61,22 @@ public class AuthorizationClient {
 	
 	public AuthorizationFuture authorize(String processorRequest) throws Exception {
 
-		final AuthorizationFuture authorizationFuture = new AuthorizationFuture();
-		channelFuture.addListener(new GenericFutureListener<ChannelFuture>() {
-			@Override
-			public void operationComplete(ChannelFuture arg0) throws Exception {
-				channelFuture.channel().pipeline().get(AuthorizationHandler.class).setAuthorizationFuture(authorizationFuture);
-				channelFuture.channel().writeAndFlush(processorRequest);				
-			}
-		
-		});
-		
-		return authorizationFuture;
+		if (channelFuture.channel().isWritable()) {
+			final AuthorizationFuture authorizationFuture = new AuthorizationFuture();
+			channelFuture.addListener(new GenericFutureListener<ChannelFuture>() {
+				@Override
+				public void operationComplete(ChannelFuture arg0) throws Exception {
+					channelFuture.channel().pipeline().get(AuthorizationHandler.class).setAuthorizationFuture(authorizationFuture);
+					channelFuture.channel().writeAndFlush(processorRequest);				
+				}
+			
+			});
+			
+			return authorizationFuture;
+		} else {
+			channelFuture.channel().close();
+			throw new Exception("Unable to connect to payment processor");
+		}
 	}
 
 	public AuthorizationInitializer authorizationInitializer(PosAuthorization posRequest, ProcessingProvider provider) {

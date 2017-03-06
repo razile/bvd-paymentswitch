@@ -2,10 +2,13 @@ package com.bvd.paymentswitch.processing.client;
 
 
 
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Provider;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +20,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
 
 @Component
@@ -33,6 +37,9 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	@Autowired
 	@Qualifier("sslClientContext")
 	private SslContext sslCtx;
+	
+	@Value("${processor.timeout.seconds}")
+	private long timeout;
 	
         
     public void intializeContext(PosAuthorization request, ProcessingProvider provider) {
@@ -51,6 +58,8 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	    		p.addLast(sslCtx.newHandler(ch.alloc()));
 	    	}
     	}
+    	
+    	p.addLast(new ReadTimeoutHandler(timeout, TimeUnit.SECONDS));
     	// the first decoder will look for the <ETX> end of text ASCII char.
 		// This will produce a substring starting with <STX>
 		p.addLast(new DelimiterBasedFrameDecoder(32768, provider.getFrameDelimiter()));
