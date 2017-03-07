@@ -1,7 +1,10 @@
 package com.bvd.paymentswitch.server;
 
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.bvd.paymentswitch.utils.ASCIIChars;
@@ -14,6 +17,7 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.timeout.IdleStateHandler;
 
 @Component
 @Qualifier("paymentSwitchInitializer")
@@ -34,6 +38,9 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 	@Autowired
 	@Qualifier("paymentSwitchHandler")
 	private ChannelInboundHandlerAdapter paymentSwitchHandler;
+	
+	@Value("${idle.timeout.seconds}")
+	private long timeout;
 
 	@Override
 	public void initChannel(SocketChannel ch) throws Exception {
@@ -43,6 +50,7 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 			p.addLast(sslCtx.newHandler(ch.alloc()));
 		}
 
+		p.addLast(new IdleStateHandler(timeout, timeout, timeout, TimeUnit.SECONDS));
 		// Add protocol decoders / encoders
 
 		// the first decoder will look for the <ETX> end of text ASCII char.

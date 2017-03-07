@@ -20,6 +20,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleStateEvent;
 
 import javax.inject.Provider;
 
@@ -154,9 +155,17 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		logger.error(cause.getMessage());
+		logger.error("Error: " + cause.getMessage() + ". Context: " + ctx.toString());
 		ctx.write(String.valueOf(ASCIIChars.NAK));
 		ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+	}
+	
+	@Override 
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+		if (evt instanceof IdleStateEvent) {
+			logger.debug("Connection Idle Timeout. Context: " + ctx.toString());
+			ctx.close();
+		}
 	}
 
 	
