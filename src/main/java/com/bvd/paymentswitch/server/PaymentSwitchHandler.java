@@ -40,6 +40,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	@Autowired
 	private AuthorizationService authService;
 
+	
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();
@@ -48,7 +49,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, String message) {
 		
-		logger.debug("READ: " + message);
+		logger.debug("READ: " + message + "		CTX:" + ctx.toString());
 		
 		// validate request using check digit
 		if (ProtocolUtils.checkDigit(message)) {
@@ -95,7 +96,6 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 						
 						String resp = authFuture.get();
 					
-						// logger.debug("Response ready to write...");
 						ctx.write(resp);
 				 		// close the channel once the content is fully written
 				    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
@@ -155,10 +155,13 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		logger.error("Error: " + cause.getMessage() + ". Context: " + ctx.toString());
+		
 		if (cause instanceof ReadTimeoutException) { 
+			logger.error("Timeout: " + cause.getMessage() + ". Context: " + ctx.toString());
 			ctx.close();
 		} else {
+			logger.error("Error: " + cause.getMessage() + ". Context: " + ctx.toString());
+			cause.printStackTrace();
 			ctx.write(String.valueOf(ASCIIChars.NAK));
 			ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 		}

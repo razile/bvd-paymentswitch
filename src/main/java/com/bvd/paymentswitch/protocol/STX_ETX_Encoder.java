@@ -28,7 +28,7 @@ public class STX_ETX_Encoder extends StringEncoder {
        // }
         
         String message = msg.toString();
-        logger.debug("SEND: " + message);
+        logger.debug("SEND: " + message + "		CTX:" + ctx.toString());
         
         message = ASCIIChars.STX + message + ASCIIChars.ETX;
         CharBuffer cb = CharBuffer.wrap(message.toCharArray());
