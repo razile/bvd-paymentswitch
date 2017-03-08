@@ -16,8 +16,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
 @Component
 @Qualifier("paymentSwitchInitializer")
@@ -50,7 +52,9 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 			p.addLast(sslCtx.newHandler(ch.alloc()));
 		}
 
-		p.addLast(new IdleStateHandler(timeout, timeout, timeout, TimeUnit.SECONDS));
+		p.addLast(new ReadTimeoutHandler(timeout, TimeUnit.SECONDS));
+		
+		p.addLast(new LoggingHandler("log", LogLevel.DEBUG));
 		// Add protocol decoders / encoders
 
 		// the first decoder will look for the <ETX> end of text ASCII char.
