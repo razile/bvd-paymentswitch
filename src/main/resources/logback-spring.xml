@@ -76,6 +76,18 @@
         </encoder>
     </appender>
 
+	<appender name="Netty-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/netty.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ARCHIVE}/netty.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d %-5level [%thread] %logger{0}:  %msg%n</pattern>
+        </encoder>
+    </appender>
+
  	<appender name="Request" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="Request-Appender" />
     </appender>
@@ -91,7 +103,9 @@
  	<appender name="Application" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="Application-Appender" />
     </appender>
-	
+		<appender name="Netty" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="Netty-Appender" />
+    </appender>
 	
 	
 	<logger name="Request-Logger" level="${LOG_LEVEL}" additivity="false">
@@ -115,7 +129,17 @@
 		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
 	</logger>
 	
-<!-- 		<root level="debug"> -->
-<!-- 			<appender-ref ref="CONSOLE"/> -->
-<!-- 		</root> -->
+	<logger name="io.netty" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Netty"/>
+		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
+	</logger>
+	
+	<logger name="java.nio" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Netty"/>
+		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
+	</logger>	
+ 	<root level="${LOG_LEVEL}"> -->
+ 		<appender-ref ref="Netty"/>] -->
+		<appender-ref ref="CONSOLE"/> -->
+	</root> -->
 </configuration>
