@@ -129,17 +129,19 @@
 		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
 	</logger>
 	
-	<logger name="io.netty" level="${LOG_LEVEL}" additivity="false">
+ 	<logger name="io.netty" level="${LOG_LEVEL}" additivity="false">
 		<appender-ref ref="Netty"/>
-		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
+		<springProfile name="development" ><appender-ref ref="CONSOLE"/></springProfile>
 	</logger>
 	
 	<logger name="java.nio" level="${LOG_LEVEL}" additivity="false">
 		<appender-ref ref="Netty"/>
 		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
 	</logger>	
- 	<root level="${LOG_LEVEL}"> -->
- 		<appender-ref ref="Netty"/>] -->
-		<appender-ref ref="CONSOLE"/> -->
-	</root> -->
+<!-- 
+ 	<root level="${LOG_LEVEL}">
+ 		<appender-ref ref="Netty"/>
+		<appender-ref ref="CONSOLE"/>
+	</root>
+ -->
 </configuration>
