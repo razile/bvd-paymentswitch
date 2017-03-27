@@ -3,6 +3,7 @@
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.bvd.paymentswitch.jpa.service.AuthorizationService;
@@ -10,26 +11,22 @@ import com.bvd.paymentswitch.models.FuelCode;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.client.AuthorizationClient;
-import com.bvd.paymentswitch.processing.client.AuthorizationFuture;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ASCIIChars;
 import com.bvd.paymentswitch.utils.ProtocolUtils;
-
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
-
+import java.util.concurrent.CompletableFuture;
 import javax.inject.Provider;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
 @Qualifier("paymentSwitchHandler")
-@ChannelHandler.Sharable
+@Scope("prototype")
 public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	static final Logger logger = LoggerFactory.getLogger(PaymentSwitchHandler.class);   
 	static final Logger requestLogger = LoggerFactory.getLogger("Request-Logger");
@@ -49,7 +46,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, String message) {
 		
-		logger.debug("READ: " + message + "		CTX:" + ctx.toString());
+		logger.debug("READ: " + message + ", Content: " + ctx.toString());
 		
 		// validate request using check digit
 		if (ProtocolUtils.checkDigit(message)) {
@@ -87,20 +84,41 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 						// provider.saveProcessorAuthorization(processorRequest);
 						// write the request
 						String requestMsg = provider.formatProcessorRequest(processorRequest);
-						AuthorizationFuture authFuture = client.authorize(requestMsg);
+						final CompletableFuture<String> authFuture = client.authorize(requestMsg);
+						authFuture.thenAccept(resp ->  {
+										ctx.write(resp);
+								 		// close the channel once the content is fully written
+								    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+								    	client.close();
+									}
+						    	);
+						
+						
+//						authFuture.addListener(new GenericFutureListener<AuthorizationFuture>() {
+//							@Override
+//							public void operationComplete(AuthorizationFuture future) throws Exception {
+//								String resp = authFuture.get();	
+//								ctx.write(resp);
+//						 		// close the channel once the content is fully written
+//						    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+//						    	
+//						    	client.close();
+//							}
+//						
+//						});
 						
 						// while (!authFuture.isDone()) {
 						// 	Thread.sleep(10);
 						// }
-						authFuture.await();
+						//authFuture.await();
 						
-						String resp = authFuture.get();
+						//String resp = authFuture.get();
 					
-						ctx.write(resp);
+						//ctx.write(resp);
 				 		// close the channel once the content is fully written
-				    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+				    	//ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 				    	
-				    	client.close();
+				    	//client.close();
 					} catch (Exception e) {
 						logger.debug(e.getMessage());
 						sendErrorResponse(ctx, request, "Error processing card");
@@ -157,10 +175,10 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		
 		if (cause instanceof ReadTimeoutException) { 
-			logger.error("Timeout: " + cause.getMessage() + ". Context: " + ctx.toString());
+			logger.error("Timeout: " + cause.getMessage());
 			ctx.close();
 		} else {
-			logger.error("Error: " + cause.getMessage() + ". Context: " + ctx.toString());
+			logger.error("Error: " + cause.getMessage());
 			cause.printStackTrace();
 			ctx.write(String.valueOf(ASCIIChars.NAK));
 			ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);

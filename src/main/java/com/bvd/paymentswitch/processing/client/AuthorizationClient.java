@@ -1,5 +1,7 @@
 package com.bvd.paymentswitch.processing.client;
 
+import java.util.concurrent.CompletableFuture;
+
 import javax.inject.Provider;
  
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,10 +61,12 @@ public class AuthorizationClient {
 	}
 
 	
-	public AuthorizationFuture authorize(String processorRequest) throws Exception {
+	public CompletableFuture<String> authorize(String processorRequest) throws Exception {
 
 		if (channelFuture.channel().isWritable()) {
-			final AuthorizationFuture authorizationFuture = new AuthorizationFuture();
+			//final AuthorizationFuture authorizationFuture = new AuthorizationFuture();
+			final CompletableFuture<String> authorizationFuture = new CompletableFuture<String>();
+			
 			channelFuture.addListener(new GenericFutureListener<ChannelFuture>() {
 				@Override
 				public void operationComplete(ChannelFuture arg0) throws Exception {

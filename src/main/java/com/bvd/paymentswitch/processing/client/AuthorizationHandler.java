@@ -24,6 +24,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,7 +42,7 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
 	
 	protected PosAuthorization posRequest;
 	protected ProcessingProvider processingProvider;
-	protected AuthorizationFuture authorizationFuture;
+	protected CompletableFuture<String> authorizationFuture;
 	
 	
 	public void initializePOSContext(PosAuthorization posRequest, ProcessingProvider processingProvider) {
@@ -48,7 +50,7 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
 		this.processingProvider = processingProvider;
 	}
 	
-	public void setAuthorizationFuture(AuthorizationFuture authFuture) {
+	public void setAuthorizationFuture(CompletableFuture<String> authFuture) {
 		this.authorizationFuture = authFuture;
 	}
 	
@@ -69,7 +71,8 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     	
     	//logger.debug("Auth Response Ready: " + bvdResp);
     	
-    	authorizationFuture.set(bvdResp);
+    	//authorizationFuture.set(bvdResp);
+    	authorizationFuture.complete(bvdResp);
     	
     	if (processingProvider.getPaymentProcessor().isClientDisconnect()) {
     		ctx.close();
@@ -85,9 +88,9 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
         	PosAuthorization response = new PosAuthorization(posRequest);
     		response.setResponseFlags(posRequest);
     		response.setReauth("Processor Timeout");
-    		authorizationFuture.set(response.toString());
+    		authorizationFuture.complete(response.toString());
         }
-        authorizationFuture.set(String.valueOf(ASCIIChars.NAK));
+        authorizationFuture.complete(String.valueOf(ASCIIChars.NAK));
         ctx.close();
     }
 }

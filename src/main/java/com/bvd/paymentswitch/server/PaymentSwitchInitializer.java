@@ -2,13 +2,15 @@ package com.bvd.paymentswitch.server;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import com.bvd.paymentswitch.utils.ASCIIChars;
-
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -25,6 +27,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 @Qualifier("paymentSwitchInitializer")
 public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> {
 
+	static final Logger logger = LoggerFactory.getLogger(PaymentSwitchInitializer.class);
 	@Autowired
 	@Qualifier("sslContext")
 	private SslContext sslCtx;
@@ -43,9 +46,13 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 	
 	@Value("${idle.timeout.seconds}")
 	private long timeout;
+	
+	@Autowired
+	private Provider<PaymentSwitchHandler> paymentSwitchHandlerProvider;
 
 	@Override
 	public void initChannel(SocketChannel ch) throws Exception {
+		logger.debug("Initializaing handler for channel: " + ch.toString());
 		ChannelPipeline p = ch.pipeline();
 
 		if (sslCtx != null) {
@@ -54,7 +61,7 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 
 		p.addLast(new ReadTimeoutHandler(timeout, TimeUnit.SECONDS));
 		
-		p.addLast(new LoggingHandler("log", LogLevel.DEBUG));
+		p.addLast(new LoggingHandler("netty", LogLevel.DEBUG));
 		// Add protocol decoders / encoders
 
 		// the first decoder will look for the <ETX> end of text ASCII char.
@@ -67,6 +74,11 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 		p.addLast(ENCODER);
 
 		// add the handler class containing processing business logic
-		p.addLast(paymentSwitchHandler);
+		p.addLast(paymentSwitchHandler());
+	}
+	
+	
+	public PaymentSwitchHandler paymentSwitchHandler() {
+		return paymentSwitchHandlerProvider.get();
 	}
 }
