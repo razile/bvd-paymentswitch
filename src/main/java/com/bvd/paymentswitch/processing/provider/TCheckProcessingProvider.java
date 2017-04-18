@@ -138,7 +138,8 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 				return false;
 			}
 		}
-		return true;
+	
+		return super.validatePOSRequest(posRequest);
 	}
 
 	@Override

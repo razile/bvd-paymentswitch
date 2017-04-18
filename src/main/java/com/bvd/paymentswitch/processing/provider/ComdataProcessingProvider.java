@@ -482,7 +482,7 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0) {
 			return false;
 		} else { 
-			return true;
+			return super.validatePOSRequest(posRequest);
 		}
 	}
 

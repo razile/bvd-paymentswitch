@@ -94,31 +94,6 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 						    	);
 						
 						
-//						authFuture.addListener(new GenericFutureListener<AuthorizationFuture>() {
-//							@Override
-//							public void operationComplete(AuthorizationFuture future) throws Exception {
-//								String resp = authFuture.get();	
-//								ctx.write(resp);
-//						 		// close the channel once the content is fully written
-//						    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-//						    	
-//						    	client.close();
-//							}
-//						
-//						});
-						
-						// while (!authFuture.isDone()) {
-						// 	Thread.sleep(10);
-						// }
-						//authFuture.await();
-						
-						//String resp = authFuture.get();
-					
-						//ctx.write(resp);
-				 		// close the channel once the content is fully written
-				    	//ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-				    	
-				    	//client.close();
 					} catch (Exception e) {
 						logger.debug(e.getMessage());
 						sendErrorResponse(ctx, request, "Error processing card");
