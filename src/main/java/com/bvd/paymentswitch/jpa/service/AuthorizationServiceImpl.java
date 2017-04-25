@@ -3,6 +3,7 @@ package com.bvd.paymentswitch.jpa.service;
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
 import com.bvd.paymentswitch.models.CompletedAuthorization;
 import com.bvd.paymentswitch.models.FuelCode;
+import com.bvd.paymentswitch.models.IncompleteAuthorization;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.MerchantCodePK;
@@ -41,11 +42,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private final FuelCodeRepository fuelCodeRepository;
 	private final CompletedAuthorizationRepository completedAuthRepository;
 	private final RejectedAuthorizationRepository rejectedAuthRepository;
+	private final IncompleteAuthorizationRepository incompleteAuthRepository;
 	
 	public AuthorizationServiceImpl(POSAuthorizationRepository posRepository, ProcessorAuthorizationRepository processorRepository,
 									BinPaymentProcessorRepository binRepository,PaymentProcessorRepository paymentProcessorRepository,
 									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository, 
-									CompletedAuthorizationRepository completedAuthRepository, RejectedAuthorizationRepository rejectedAuthRepository) {
+									CompletedAuthorizationRepository completedAuthRepository, RejectedAuthorizationRepository rejectedAuthRepository,
+									IncompleteAuthorizationRepository incompleteAuthRepository) {
 		this.posRepository = posRepository;
 		this.processorRepository = processorRepository;
 		this.binRepository = binRepository;
@@ -54,6 +57,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		this.fuelCodeRepository = fuelCodeRepository;
 		this.completedAuthRepository = completedAuthRepository;
 		this.rejectedAuthRepository = rejectedAuthRepository;
+		this.incompleteAuthRepository = incompleteAuthRepository;
 	}
 	
 	
@@ -215,6 +219,20 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			return posRepository.findByAuthIdAndDateTime(authId, ts);
 		} catch (Exception e) {
 			return null;
+		}
+	}
+
+
+	@Override
+	public List<IncompleteAuthorization> getIncompleteAuthorizations(Timestamp startTS, Timestamp endTS) {
+		if (startTS != null) {
+			if (endTS != null) {
+				return  incompleteAuthRepository.findByCreateTimestampBetween(startTS, endTS);		
+			} else {
+				return incompleteAuthRepository.findByCreateTimestampAfter(startTS);
+			} 
+		} else {
+			return (List<IncompleteAuthorization>) incompleteAuthRepository.findAll();
 		}
 	}
 	

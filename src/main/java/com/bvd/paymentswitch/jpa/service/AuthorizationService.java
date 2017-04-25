@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
 import com.bvd.paymentswitch.models.CompletedAuthorization;
 import com.bvd.paymentswitch.models.FuelCode;
+import com.bvd.paymentswitch.models.IncompleteAuthorization;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.PaymentProcessor;
@@ -43,4 +44,6 @@ public interface AuthorizationService {
 	List<RejectedAuthorization> getRejectedAuthorizations(Timestamp startTS, Timestamp endTS);
 	
 	String getFuelCodeForAuthorization(String authId, Timestamp ts);
+	
+	List<IncompleteAuthorization> getIncompleteAuthorizations(Timestamp startTS, Timestamp endTS);
 }
