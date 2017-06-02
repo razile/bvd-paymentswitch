@@ -30,6 +30,7 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 
     private PosAuthorization posRequest;
     private ProcessingProvider provider;
+    private String processorRequest;
     
 	@Autowired
 	private Provider<AuthorizationHandler> authHandlerProvider;
@@ -41,13 +42,13 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	@Value("${processor.timeout.seconds}")
 	private long timeout;
 	
-        
-    public void intializeContext(PosAuthorization request, ProcessingProvider provider) {
-    	this.posRequest = request;
-    	this.provider = provider;
-    }
 	
-   
+ 
+    public void initializePOSContext(PosAuthorization posRequest, String processorRequest, ProcessingProvider processingProvider) {
+		this.posRequest = posRequest;
+		this.provider = processingProvider;
+		this.processorRequest = processorRequest;
+	}
 
 	@Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -78,7 +79,7 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	
 	public AuthorizationHandler authorizationHandler(PosAuthorization posRequest, ProcessingProvider provider) {
 		AuthorizationHandler handler = authHandlerProvider.get();
-		handler.initializePOSContext(posRequest, provider);
+		handler.initializePOSContext(posRequest, processorRequest, provider);
 		return handler;
 	}
 	

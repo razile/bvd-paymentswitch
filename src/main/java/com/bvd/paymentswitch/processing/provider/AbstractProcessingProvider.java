@@ -44,13 +44,14 @@ public abstract class AbstractProcessingProvider implements ProcessingProvider {
 	}
 	
 	@Override 
-	public void saveProcessorAuthorization(ProcessorAuthorization auth) {
-		authService.saveAuthorization(auth, this);
+	public void saveAuthorization(PosAuthorization request, ProcessorAuthorization response) {
+		authService.saveAuthorizationTransaction(request, response, this);
 	}
 	
-	@Override 
-	public boolean validatePOSRequest(PosAuthorization posRequest) {
 	
+
+	@Override 
+	public boolean validateCompletionAmount(PosAuthorization posRequest) {
 		if (posRequest.getTransactionType() == 1) {
 			BigDecimal sellingPrice = posRequest.getSellingPrice();
 			BigDecimal quantity = posRequest.getQuantityNet();
@@ -62,6 +63,7 @@ public abstract class AbstractProcessingProvider implements ProcessingProvider {
 			if (amount.compareTo(BigDecimal.ZERO) <= 0 || quantity.compareTo(BigDecimal.ZERO) <= 0|| sellingPrice.compareTo(BigDecimal.ZERO) <= 0) return false;
 			
 		}
+		
 		return true;
 	}
 

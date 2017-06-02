@@ -26,6 +26,9 @@ public class ProcessorAuthorization {
 	private Long id;
 	// required fields - header
 	
+	@Column
+	private Long requestId;
+	
 	@Column(name="type", length=7)
 	private String type;				// Character (2)	Request: IC (pre), AC (post)  VC (void), Response: PC (pre-approved), RC (post/void-approved), XC or EC (declined)
 										// Comdata: SP00007, 00014, 00011
@@ -596,6 +599,19 @@ public class ProcessorAuthorization {
 		this.sellingPrice = sellingPrice;
 	}
 
+
+
+	public Long getRequestId() {
+		return requestId;
+	}
+
+
+
+	public void setRequestId(Long requestId) {
+		this.requestId = requestId;
+	}
+
+	
 
 	
 	

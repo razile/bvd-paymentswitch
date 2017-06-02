@@ -41,13 +41,15 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
 	static final Logger responseLogger = LoggerFactory.getLogger("Response-Logger");
 	
 	protected PosAuthorization posRequest;
+	protected String processorRequest;
 	protected ProcessingProvider processingProvider;
 	protected CompletableFuture<String> authorizationFuture;
 	
 	
-	public void initializePOSContext(PosAuthorization posRequest, ProcessingProvider processingProvider) {
+	public void initializePOSContext(PosAuthorization posRequest, String processorRequest, ProcessingProvider processingProvider) {
 		this.posRequest = posRequest;
 		this.processingProvider = processingProvider;
+		this.processorRequest = processorRequest;
 	}
 	
 	public void setAuthorizationFuture(CompletableFuture<String> authFuture) {
@@ -63,7 +65,7 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     	responseLogger.info(msg);
     	ProcessorAuthorization processorResponse = processingProvider.parseProcessorResponse(posRequest, msg); 	
     	
-    	processingProvider.saveProcessorAuthorization(processorResponse);
+    	processingProvider.saveAuthorization(posRequest, processorResponse);
     	
     	PosAuthorization posResponse = processingProvider.createPosResponse(posRequest, processorResponse);
     	
@@ -85,12 +87,12 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
         logger.error(cause.toString());
         
         if (cause instanceof ReadTimeoutException) {
-        	PosAuthorization response = new PosAuthorization(posRequest);
-    		response.setResponseFlags(posRequest);
-    		response.setReauth("Processor Timeout");
-    		authorizationFuture.complete(response.toString());
+        	logger.debug("Processor timed out");
+	    	authorizationFuture.complete("retry");
+	    	ctx.close();
+        } else {
+        	authorizationFuture.complete(String.valueOf(ASCIIChars.NAK));
+        	ctx.close();
         }
-        authorizationFuture.complete(String.valueOf(ASCIIChars.NAK));
-        ctx.close();
     }
 }

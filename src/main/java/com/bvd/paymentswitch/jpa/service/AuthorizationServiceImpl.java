@@ -61,34 +61,32 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 	
 	
-	@Override
-	@Async("threadPoolTaskExecutor")
-	public Future<PosAuthorization> saveAuthorization(PosAuthorization k) {
-		
-		try {
-			k.setCreateTimestamp(ProtocolUtils.getUTCTimestamp());
-			k = posRepository.save(k);
-		} catch (Exception e) {
-			// write to a file if failed
-			logger.error("Unable to persist KardallHostAuthorization for Trn: " + k.getTrnNo() + ", Error: " +  e.getMessage());
-			requestLogger.info(k.toString());
-		}
-		return new AsyncResult<>(k);
-	}
 
 	@Override
 	@Async("threadPoolTaskExecutor")
-	public Future<ProcessorAuthorization> saveAuthorization(ProcessorAuthorization p, ProcessingProvider provider) {
+	public void saveAuthorizationTransaction(PosAuthorization request, ProcessorAuthorization response, ProcessingProvider provider) {
 		
 		try {
-			p.setCreateTimestamp(ProtocolUtils.getUTCTimestamp());
-			p = processorRepository.save(p);
+			Timestamp create_ts = ProtocolUtils.getUTCTimestamp();
+			
+			request.setCreateTimestamp(create_ts);
+			request = posRepository.save(request);
+			
+			response.setRequestId(request.getId());
+			response.setCreateTimestamp(create_ts);
+			response.setCardNumber(request.getCard1());
+			response.setCardToken(request.getTrack2Data());
+			response.setUnitNumber(request.getUnitNumber());
+			response.setDriverID(request.getDriverId());
+			response.setInvoiceNumber(request.getTrnNo());
+			
+			processorRepository.save(response);
 		} catch (Exception e) {
 			// write to a file if failed
-			logger.error("Unable to persist PriorPostAuthorization for Trn: " + p.getInvoiceNumber() + ", Error: " +  e.getMessage());
-			responseLogger.info(provider.formatProcessorRequest(p));
+			logger.error("Unable to persist transactions for Trn: " + response.getInvoiceNumber() + ", Error: " +  e.getMessage());
+			requestLogger.info(request.toString());
+			responseLogger.info(provider.formatProcessorRequest(response));
 		}
-		return new AsyncResult<>(p);
 	}
 
 

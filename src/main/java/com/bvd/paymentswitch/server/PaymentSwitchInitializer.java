@@ -44,7 +44,7 @@ public class PaymentSwitchInitializer extends ChannelInitializer<SocketChannel> 
 	@Qualifier("paymentSwitchHandler")
 	private ChannelInboundHandlerAdapter paymentSwitchHandler;
 	
-	@Value("${idle.timeout.seconds}")
+	@Value("${pos.timeout.seconds}")
 	private long timeout;
 	
 	@Autowired

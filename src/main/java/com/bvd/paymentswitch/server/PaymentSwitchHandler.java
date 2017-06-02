@@ -19,6 +19,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
+
+import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
 import javax.inject.Provider;
 import org.slf4j.Logger;
@@ -54,8 +56,7 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 			requestLogger.info(message);
 			
 			// parse the request
-			PosAuthorization request = new PosAuthorization(message);
-			authService.saveAuthorization(request);		
+			PosAuthorization request = new PosAuthorization(message);	
 
 			// find processor 
 			String bin = request.getCard1().substring(0,6);
@@ -66,6 +67,8 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 				sendErrorResponse(ctx, request, "Unable to process card");
 			} else if (provider.validatePOSRequest(request) == false) {
 				sendRequiredPromptResponse(ctx, request, provider);
+			} else if (provider.validateCompletionAmount(request) == false) {
+				sendForcedCompletion(ctx, request, provider);
 			} else {
 				// authorize it
 				String merchantId = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
@@ -76,20 +79,23 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 					FuelCode fc = authService.findFuelCode(request.getFuelType());
 					request.setFuelCode(fc);
 					try {
-						AuthorizationClient client = authorizationClient(provider); 
-						client.connect(request, provider);
-						
 						ProcessorAuthorization processorRequest = provider.createProcessorRequest(request, merchantId);
-
-						// provider.saveProcessorAuthorization(processorRequest);
-						// write the request
 						String requestMsg = provider.formatProcessorRequest(processorRequest);
+						
+						AuthorizationClient client = authorizationClient(provider); 
+						client.connect(request, requestMsg, provider);
+			
+						
 						final CompletableFuture<String> authFuture = client.authorize(requestMsg);
 						authFuture.thenAccept(resp ->  {
-										ctx.write(resp);
-								 		// close the channel once the content is fully written
-								    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-								    	client.close();
+										if (resp.equalsIgnoreCase("retry"))  {
+											reAuthorize(ctx, request,requestMsg,provider);
+										} else {
+											ctx.write(resp);
+									 		// close the channel once the content is fully written
+									    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+									    	client.close();
+										}
 									}
 						    	);
 						
@@ -113,11 +119,58 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	}
 	
 	
+	private void reAuthorize(ChannelHandlerContext ctx, PosAuthorization request, String requestMsg, ProcessingProvider provider) {
+		try {
+			AuthorizationClient client = authorizationClient(provider); 
+			client.connect(request, requestMsg, provider);
+
+			
+			final CompletableFuture<String> authFuture = client.authorize(requestMsg);
+			authFuture.thenAccept(resp ->  {
+							if (resp.equalsIgnoreCase("retry"))  {
+								sendReauthResponse(ctx,request,"Processor not responding");
+							} else {
+								ctx.write(resp);
+						 		// close the channel once the content is fully written
+						    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+						    	client.close();
+							}
+						}
+			    	);
+		} catch (Exception e) {
+			logger.debug(e.getMessage());
+			sendErrorResponse(ctx, request, "Error processing card");
+		}
+		
+	}
+
 	public AuthorizationClient authorizationClient(ProcessingProvider provider) {
 		AuthorizationClient authClient = authClientProvider.get();
 		return authClient;
 	}
 	
+	
+	public void sendForcedCompletion(ChannelHandlerContext ctx, PosAuthorization request, ProcessingProvider provider) {
+		ProcessorAuthorization forcedAuth = new ProcessorAuthorization();
+		forcedAuth.setType("000");
+		forcedAuth.setResponseCode("000");
+		BigDecimal zero = ProtocolUtils.getBigDecimal("0.00", 2);
+		forcedAuth.setTotal(zero);
+		forcedAuth.setMessage("Completion for $0.00 transaction");
+		
+		PosAuthorization response = new PosAuthorization(request);
+		response.setResponseFlags(request);
+		response.setAmount(zero);
+		response.setAuthorized("00000");	
+		
+		provider.saveAuthorization(request, forcedAuth);
+		
+		String resp = response.toString();
+
+		ctx.write(resp);
+ 		// close the channel once the content is fully written
+    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+	}
 	
 	public void sendRequiredPromptResponse(ChannelHandlerContext ctx, PosAuthorization request, ProcessingProvider provider) {
 		PosAuthorization response = new PosAuthorization(request);
@@ -138,6 +191,18 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 		PosAuthorization response = new PosAuthorization(request);
 		response.setResponseFlags(request);
 		response.setDenied(error, null);
+		
+		String resp = response.toString();
+//		logger.debug("SEND: " + resp);
+		ctx.write(resp);
+ 		// close the channel once the content is fully written
+    	ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+	}
+	
+	public void sendReauthResponse(ChannelHandlerContext ctx, PosAuthorization request, String error) {
+		PosAuthorization response = new PosAuthorization(request);
+		response.setResponseFlags(request);
+		response.setReauth(error);
 		
 		String resp = response.toString();
 //		logger.debug("SEND: " + resp);

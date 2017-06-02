@@ -17,9 +17,6 @@ import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 
 public interface AuthorizationService {
 	
-	Future<PosAuthorization> saveAuthorization(PosAuthorization k);
-
-	Future<ProcessorAuthorization> saveAuthorization(ProcessorAuthorization p, ProcessingProvider provider);
 	
 	PaymentProcessor savePaymentProcessor(PaymentProcessor p);
 	
@@ -46,4 +43,7 @@ public interface AuthorizationService {
 	String getFuelCodeForAuthorization(String authId, Timestamp ts);
 	
 	List<IncompleteAuthorization> getIncompleteAuthorizations(Timestamp startTS, Timestamp endTS);
+
+	void saveAuthorizationTransaction(PosAuthorization request, ProcessorAuthorization response,
+			ProcessingProvider provider);
 }

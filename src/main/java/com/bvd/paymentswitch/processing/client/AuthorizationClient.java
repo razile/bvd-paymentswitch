@@ -40,13 +40,13 @@ public class AuthorizationClient {
 	private EventLoopGroup group = null;
 
 
-	public void connect(PosAuthorization posRequest, ProcessingProvider provider) throws Exception {
+	public void connect(PosAuthorization posRequest, String processorRequest, ProcessingProvider provider) throws Exception {
 
 		group = new NioEventLoopGroup(1);
 
 		PaymentProcessor p = provider.getPaymentProcessor();
 		Bootstrap b = new Bootstrap();
-		b.group(group).channel(NioSocketChannel.class).handler(authorizationInitializer(posRequest, provider));
+		b.group(group).channel(NioSocketChannel.class).handler(authorizationInitializer(posRequest, processorRequest, provider));
 
 		channelFuture = b.connect(p.getHost(), p.getPort());
 
@@ -83,9 +83,9 @@ public class AuthorizationClient {
 		}
 	}
 
-	public AuthorizationInitializer authorizationInitializer(PosAuthorization posRequest, ProcessingProvider provider) {
+	public AuthorizationInitializer authorizationInitializer(PosAuthorization posRequest, String processorRequest, ProcessingProvider provider) {
 		AuthorizationInitializer authInit = authInitProvider.get();
-		authInit.intializeContext(posRequest, provider);
+		authInit.initializePOSContext(posRequest, processorRequest, provider);
 		return authInit;
 	}
 	

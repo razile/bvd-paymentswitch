@@ -109,7 +109,7 @@ public class EFSProcessingProvider extends PriorPostAbstractProcessingProvider {
 //		} else { 
 //			return true;
 //		}
-		return super.validatePOSRequest(posRequest);
+		return true;
 	}
 
 	@Override
