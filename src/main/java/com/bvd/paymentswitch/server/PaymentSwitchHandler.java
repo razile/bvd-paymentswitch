@@ -146,11 +146,14 @@ public class PaymentSwitchHandler extends SimpleChannelInboundHandler<String> {
 	
 	
 	public void sendForcedCompletion(ChannelHandlerContext ctx, PosAuthorization request, ProcessingProvider provider) {
+		
+		String merchantId = authService.findMerchantID(request.getSiteId().trim(), provider.getPaymentProcessor().getId());
 		ProcessorAuthorization forcedAuth = new ProcessorAuthorization();
 		forcedAuth.setType("000");
 		forcedAuth.setResponseCode("RC");
+		forcedAuth.setLocation(merchantId);
 		String authCode = request.getAuthId();
-		forcedAuth.setAuthorizationCode( (authCode != null && authCode.length() > 0) ? authCode:"00000");
+		forcedAuth.setAuthorizationCode( (authCode != null && authCode.length() > 0) ? authCode:"000000000000");
 		BigDecimal zero = ProtocolUtils.getBigDecimal("0.00", 2);
 		forcedAuth.setTotal(zero);
 		forcedAuth.setMessage("Completion for $0.00 transaction");
