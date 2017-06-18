@@ -26,7 +26,7 @@ public class ProcessorAuthorization {
 	private Long id;
 	// required fields - header
 	
-	@Column
+	@Column(name="request_id")
 	private Long requestId;
 	
 	@Column(name="type", length=7)
