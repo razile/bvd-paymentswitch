@@ -39,6 +39,9 @@ public class IncompleteAuthorization {
 	
 	@Column
 	private String siteId;
+	
+	@Column 
+	private String cardNumber;
 
 	public String getAuthorizationCode() {
 		return authorizationCode;
@@ -87,5 +90,15 @@ public class IncompleteAuthorization {
 	public void setMerchantId(String merchantId) {
 		this.merchantId = merchantId;
 	}
+
+	public String getCardNumber() {
+		return cardNumber;
+	}
+
+	public void setCardNumber(String cardNumber) {
+		this.cardNumber = cardNumber;
+	}
+	
+	
 	
 }
