@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
+import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.models.PaymentProcessor;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 
@@ -40,7 +41,7 @@ public class AuthorizationClient {
 	private EventLoopGroup group = null;
 
 
-	public void connect(PosAuthorization posRequest, String processorRequest, ProcessingProvider provider) throws Exception {
+	public void connect(PosAuthorization posRequest, ProcessorAuthorization processorRequest, ProcessingProvider provider) throws Exception {
 
 		group = new NioEventLoopGroup(1);
 
@@ -61,9 +62,10 @@ public class AuthorizationClient {
 	}
 
 	
-	public CompletableFuture<String> authorize(String processorRequest) throws Exception {
+	public CompletableFuture<String> authorize(ProcessorAuthorization processorRequest, ProcessingProvider provider) throws Exception {
 
 		if (channelFuture.channel().isWritable()) {
+			String request = provider.formatProcessorRequest(processorRequest);
 			//final AuthorizationFuture authorizationFuture = new AuthorizationFuture();
 			final CompletableFuture<String> authorizationFuture = new CompletableFuture<String>();
 			
@@ -71,7 +73,7 @@ public class AuthorizationClient {
 				@Override
 				public void operationComplete(ChannelFuture arg0) throws Exception {
 					channelFuture.channel().pipeline().get(AuthorizationHandler.class).setAuthorizationFuture(authorizationFuture);
-					channelFuture.channel().writeAndFlush(processorRequest);				
+					channelFuture.channel().writeAndFlush(request);				
 				}
 			
 			});
@@ -83,7 +85,7 @@ public class AuthorizationClient {
 		}
 	}
 
-	public AuthorizationInitializer authorizationInitializer(PosAuthorization posRequest, String processorRequest, ProcessingProvider provider) {
+	public AuthorizationInitializer authorizationInitializer(PosAuthorization posRequest, ProcessorAuthorization  processorRequest, ProcessingProvider provider) {
 		AuthorizationInitializer authInit = authInitProvider.get();
 		authInit.initializePOSContext(posRequest, processorRequest, provider);
 		return authInit;

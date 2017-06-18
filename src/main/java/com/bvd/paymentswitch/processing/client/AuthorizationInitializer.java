@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
+import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -30,7 +31,7 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 
     private PosAuthorization posRequest;
     private ProcessingProvider provider;
-    private String processorRequest;
+    private ProcessorAuthorization processorRequest;
     
 	@Autowired
 	private Provider<AuthorizationHandler> authHandlerProvider;
@@ -44,7 +45,7 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	
 	
  
-    public void initializePOSContext(PosAuthorization posRequest, String processorRequest, ProcessingProvider processingProvider) {
+    public void initializePOSContext(PosAuthorization posRequest, ProcessorAuthorization processorRequest, ProcessingProvider processingProvider) {
 		this.posRequest = posRequest;
 		this.provider = processingProvider;
 		this.processorRequest = processorRequest;

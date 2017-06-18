@@ -15,7 +15,7 @@ import javax.persistence.Transient;
 
 @Entity
 @Table(name="processor_authorization",
-		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type,response_code", unique=true),
+		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type,response_code,request_id", unique=true),
 					@Index(name="idx_processor_create_ts", columnList="create_timestamp",unique=false),
 					@Index(name="idx_processor_invoice", columnList="invoice_number", unique=false) 
 					})

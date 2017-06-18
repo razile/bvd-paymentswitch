@@ -2,7 +2,6 @@ package com.bvd.paymentswitch.jpa.service;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
 import com.bvd.paymentswitch.models.CompletedAuthorization;

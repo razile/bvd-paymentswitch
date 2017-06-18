@@ -19,11 +19,12 @@ import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ASCIIChars;
+import com.bvd.paymentswitch.utils.ProtocolUtils;
+
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
-
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
@@ -41,12 +42,12 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
 	static final Logger responseLogger = LoggerFactory.getLogger("Response-Logger");
 	
 	protected PosAuthorization posRequest;
-	protected String processorRequest;
+	protected ProcessorAuthorization processorRequest;
 	protected ProcessingProvider processingProvider;
 	protected CompletableFuture<String> authorizationFuture;
 	
 	
-	public void initializePOSContext(PosAuthorization posRequest, String processorRequest, ProcessingProvider processingProvider) {
+	public void initializePOSContext(PosAuthorization posRequest, ProcessorAuthorization processorRequest, ProcessingProvider processingProvider) {
 		this.posRequest = posRequest;
 		this.processingProvider = processingProvider;
 		this.processorRequest = processorRequest;
@@ -63,17 +64,14 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
     	logger.debug("READ: " + msg);
     	
     	responseLogger.info(msg);
-    	ProcessorAuthorization processorResponse = processingProvider.parseProcessorResponse(posRequest, msg); 	
-    	
-    	processingProvider.saveAuthorization(posRequest, processorResponse);
+    	ProcessorAuthorization processorResponse = processingProvider.parseProcessorResponse(posRequest, msg); 	 	
     	
     	PosAuthorization posResponse = processingProvider.createPosResponse(posRequest, processorResponse);
     	
     	String bvdResp = posResponse.toString();
     	
-    	//logger.debug("Auth Response Ready: " + bvdResp);
+    	processingProvider.saveAuthorization(posRequest, processorResponse);
     	
-    	//authorizationFuture.set(bvdResp);
     	authorizationFuture.complete(bvdResp);
     	
     	if (processingProvider.getPaymentProcessor().isClientDisconnect()) {
@@ -88,11 +86,24 @@ public class AuthorizationHandler extends SimpleChannelInboundHandler<String>  {
         
         if (cause instanceof ReadTimeoutException) {
         	logger.debug("Processor timed out");
-	    	authorizationFuture.complete("retry");
+        	
+        	if (posRequest.getTransactionType() == 1)  {
+        		// complete the transaction 
+        		processorRequest.setType("RC");
+        		processorRequest.setResponseCode("F");
+            	PosAuthorization posResponse = processingProvider.createPosResponse(posRequest, processorRequest);      
+            	String bvdResp = posResponse.toString();     
+        		processingProvider.saveAuthorization(posRequest, processorRequest);
+            	authorizationFuture.complete(bvdResp);
+        	} else {
+        		authorizationFuture.complete(String.valueOf(ASCIIChars.NAK));
+        	}
 	    	ctx.close();
         } else {
         	authorizationFuture.complete(String.valueOf(ASCIIChars.NAK));
         	ctx.close();
         }
     }
+    
+
 }

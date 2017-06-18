@@ -15,7 +15,6 @@ import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import javax.transaction.Transactional;
 
@@ -23,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 @Service
