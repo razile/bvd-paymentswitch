@@ -19,8 +19,6 @@ import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 import com.bvd.paymentswitch.utils.ASCIIChars;
-import com.bvd.paymentswitch.utils.ProtocolUtils;
-
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

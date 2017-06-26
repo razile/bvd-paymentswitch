@@ -29,8 +29,7 @@ import org.springframework.stereotype.Service;
 public class AuthorizationServiceImpl implements AuthorizationService {
 	
 	static final Logger logger = LoggerFactory.getLogger(AuthorizationService.class);
-	static final Logger requestLogger = LoggerFactory.getLogger("Request-Persistence-Logger");
-	static final Logger responseLogger = LoggerFactory.getLogger("Response-Persistence-Logger");
+	static final Logger persistenceLogger = LoggerFactory.getLogger("Persistence-Logger");
 	
 	private final POSAuthorizationRepository posRepository;
 	private final ProcessorAuthorizationRepository processorRepository;
@@ -63,14 +62,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Override
 	@Async("threadPoolTaskExecutor")
 	public void saveAuthorizationTransaction(PosAuthorization request, ProcessorAuthorization response, ProcessingProvider provider) {
-		
+		Timestamp create_ts = ProtocolUtils.getUTCTimestamp();
+		Long req_id = null;
 		try {
-			Timestamp create_ts = ProtocolUtils.getUTCTimestamp();
 			
 			request.setCreateTimestamp(create_ts);
 			request = posRepository.save(request);
-			
-			response.setRequestId(request.getId());
+			req_id = request.getId();
+			response.setRequestId(req_id);
 			response.setCreateTimestamp(create_ts);
 			response.setCardNumber(request.getCard1());
 			response.setCardToken(request.getTrack2Data());
@@ -78,12 +77,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			response.setDriverID(request.getDriverId());
 			response.setInvoiceNumber(request.getTrnNo());
 			
+			String authCode = response.getAuthorizationCode();
+			if ( authCode == null || authCode.length()==0 ) {
+				response.setAuthorizationCode(request.getAuthId());
+			}
+			
 			processorRepository.save(response);
 		} catch (Exception e) {
 			// write to a file if failed
 			logger.error("Unable to persist transactions for Trn: " + response.getInvoiceNumber() + ", Error: " +  e.getMessage());
-			requestLogger.info(request.toString());
-			responseLogger.info(provider.formatProcessorRequest(response));
+			persistenceLogger.info("TS:" + create_ts + ",ID:" + req_id + ",POS:" + request.toString() + ",PROC:" +  provider.formatProcessorRequest(response));
 		}
 	}
 
