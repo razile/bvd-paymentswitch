@@ -1,7 +1,10 @@
 package com.bvd.paymentswitch.processing.provider;
 
+import java.math.BigDecimal;
+
 import com.bvd.paymentswitch.jpa.service.AuthorizationService;
 import com.bvd.paymentswitch.models.PaymentProcessor;
+import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 
 import io.netty.channel.ChannelInboundHandler;
@@ -41,8 +44,27 @@ public abstract class AbstractProcessingProvider implements ProcessingProvider {
 	}
 	
 	@Override 
-	public void saveProcessorAuthorization(ProcessorAuthorization auth) {
-		authService.saveAuthorization(auth, this);
+	public void saveAuthorization(PosAuthorization request, ProcessorAuthorization response) {
+		authService.saveAuthorizationTransaction(request, response, this);
+	}
+	
+	
+
+	@Override 
+	public boolean validateCompletionAmount(PosAuthorization posRequest) {
+		if (posRequest.getTransactionType() == 1) {
+			BigDecimal sellingPrice = posRequest.getSellingPrice();
+			BigDecimal quantity = posRequest.getQuantityNet();
+			BigDecimal amount = posRequest.getAmount();
+			
+			if (sellingPrice == null || quantity == null || amount == null) return false;
+			
+			
+			if (amount.compareTo(BigDecimal.ZERO) <= 0 || quantity.compareTo(BigDecimal.ZERO) <= 0|| sellingPrice.compareTo(BigDecimal.ZERO) <= 0) return false;
+			
+		}
+		
+		return true;
 	}
 
 

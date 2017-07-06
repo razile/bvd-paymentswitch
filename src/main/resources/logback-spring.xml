@@ -42,21 +42,10 @@
             <pattern>%d		%msg%n</pattern>
         </encoder>
     </appender>
-	<appender name="Request-Persistence-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/request_persistence_errors.log</file>
+	<appender name="Persistence-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/persistence_errors.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_ARCHIVE}/request_persistence_errors.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>100MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%msg%n</pattern>
-        </encoder>
-    </appender>
-	<appender name="Response-Persistence-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/response_persistence_errors.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_ARCHIVE}/response_persistance_errors.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_ARCHIVE}/persistence_errors.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>60</maxHistory>
             <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>
@@ -76,22 +65,33 @@
         </encoder>
     </appender>
 
+	<appender name="Netty-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/netty.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ARCHIVE}/netty.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d %-5level [%thread] %logger{0}:  %msg%n</pattern>
+        </encoder>
+    </appender>
+
  	<appender name="Request" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="Request-Appender" />
     </appender>
  	<appender name="Response" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="Response-Appender" />
     </appender>
- 	<appender name="Request-Persistence" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="Request-Persistence-Appender" />
-    </appender>
- 	<appender name="Response-Persistence" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="Response-Persistence-Appender" />
+ 	<appender name="Persistence" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="Persistence-Appender" />
     </appender>
  	<appender name="Application" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="Application-Appender" />
     </appender>
-	
+		<appender name="Netty" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="Netty-Appender" />
+    </appender>
 	
 	
 	<logger name="Request-Logger" level="${LOG_LEVEL}" additivity="false">
@@ -102,12 +102,8 @@
 		<appender-ref ref="Response"/>
 	</logger>
 	
-	<logger name="Request-Persistence-Logger" level="${LOG_LEVEL}" additivity="false">
-		<appender-ref ref="Request-Persistence"/>
-	</logger>
-	
-	<logger name="Response-Persistence-Logger" level="${LOG_LEVEL}" additivity="false">
-		<appender-ref ref="Response-Persistence"/>
+	<logger name="Persistence-Logger" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Persistence"/>
 	</logger>
 	
 	<logger name="com.bvd.paymentswitch" level="${LOG_LEVEL}" additivity="false">
@@ -115,7 +111,19 @@
 		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
 	</logger>
 	
-<!-- 		<root level="debug"> -->
-<!-- 			<appender-ref ref="CONSOLE"/> -->
-<!-- 		</root> -->
+ 	<logger name="io.netty" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Netty"/>
+		<springProfile name="development" ><appender-ref ref="CONSOLE"/></springProfile>
+	</logger>
+	
+	<logger name="java.nio" level="${LOG_LEVEL}" additivity="false">
+		<appender-ref ref="Netty"/>
+		<springProfile name="development"><appender-ref ref="CONSOLE"/></springProfile>
+	</logger>	
+<!-- 
+ 	<root level="${LOG_LEVEL}">
+ 		<appender-ref ref="Netty"/>
+		<appender-ref ref="CONSOLE"/>
+	</root>
+ -->
 </configuration>

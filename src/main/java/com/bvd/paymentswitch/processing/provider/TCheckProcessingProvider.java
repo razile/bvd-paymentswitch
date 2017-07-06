@@ -2,10 +2,14 @@ package com.bvd.paymentswitch.processing.provider;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.protocol.PrePostEncoder;
 import com.bvd.paymentswitch.protocol.STX_ETX_Decoder;
+import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvider {
 
@@ -134,6 +138,7 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 				return false;
 			}
 		}
+		
 		return true;
 	}
 
@@ -147,6 +152,58 @@ public class TCheckProcessingProvider extends PriorPostAbstractProcessingProvide
 			
 		}
 		
+	}
+	
+	@Override
+	public String formatProcessorRequest(ProcessorAuthorization processorRequest) {
+		String msg = "|" + processorRequest.getType() + "|" + processorRequest.getLocation() + "|" + processorRequest.getVersionNumber() + "|" +  processorRequest.getCount() + "|";
+		
+		List<String> tokens = new ArrayList<String>();
+		
+		ProtocolUtils.createToken("SSVR", processorRequest.getSoftwareSystem(), tokens);   	
+		ProtocolUtils.createToken("CUST", processorRequest.getCustomerInformation(), tokens);
+		ProtocolUtils.createToken("CNC", processorRequest.getPosCurrency(), tokens);
+		ProtocolUtils.createToken("LNG", processorRequest.getLanguage(), tokens);
+		ProtocolUtils.createToken("UOM", processorRequest.getUnitofMeasure(), tokens);
+		
+		ProtocolUtils.createToken(getCardKey(), getCardValue(processorRequest), tokens);
+		ProtocolUtils.createToken("FROM", processorRequest.getRegisterIndicator(), tokens);
+		ProtocolUtils.createToken("INVN", processorRequest.getInvoiceNumber(), tokens);
+	
+		
+		ProtocolUtils.createToken("AUTH", processorRequest.getAuthorizationCode(), tokens);
+	
+		
+		ProtocolUtils.createToken("HBRD", processorRequest.getHubReading(), tokens);
+		ProtocolUtils.createToken("TRLR", processorRequest.getTrailerNumber(), tokens);
+		ProtocolUtils.createToken("UNIT", processorRequest.getUnitNumber(), tokens);
+		ProtocolUtils.createToken("DRID", processorRequest.getDriverID(), tokens);
+		ProtocolUtils.createToken("DLIC", processorRequest.getDriversLicenseNumber(), tokens);
+		ProtocolUtils.createToken("ODRD", processorRequest.getOdometerReading(), tokens);
+		ProtocolUtils.createToken("TRIP", processorRequest.getTrip(), tokens);
+		ProtocolUtils.createToken("LICN", processorRequest.getVehiclePlateNumber(), tokens);
+		ProtocolUtils.createToken("PONB", processorRequest.getPoNumber(), tokens);
+		
+		
+		if (processorRequest.getSellingPrice() != null) ProtocolUtils.createToken("PPRC", processorRequest.getSellingPrice().toPlainString(), tokens);
+		if (processorRequest.getTotal() != null) ProtocolUtils.createToken("TOTL", processorRequest.getTotal().toPlainString(), tokens);
+		
+		
+		ProtocolUtils.createToken("DISP", processorRequest.getDispensed(), tokens);
+		ProtocolUtils.createToken("MERC", processorRequest.getMerchandise(), tokens);
+		ProtocolUtils.createToken("FUEL", processorRequest.getFuel(), tokens);
+		ProtocolUtils.createToken("FLMT", processorRequest.getFuelLimit(), tokens);
+
+		ProtocolUtils.createToken("ERCD", processorRequest.getErrorCode(), tokens);
+		ProtocolUtils.createToken("PRNT", processorRequest.getPrint(), tokens);
+		ProtocolUtils.createToken("MSG", processorRequest.getMessage(), tokens);
+		
+		for (String s : tokens) {
+			msg += s + "|";
+		}
+		msg = msg.substring(0, msg.length()-1);  // strip off the last | 
+	
+		return msg;
 	}
 
 }

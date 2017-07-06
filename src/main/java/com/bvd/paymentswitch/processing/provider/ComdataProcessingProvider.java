@@ -35,10 +35,6 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	@Override
 	public ProcessorAuthorization parseProcessorResponse(PosAuthorization posRequest, String response) {
 		ProcessorAuthorization processorResponse = new ProcessorAuthorization();
-		processorResponse.setCardNumber(posRequest.getCard1());
-		processorResponse.setCardToken(posRequest.getTrack2Data());
-		processorResponse.setUnitNumber(posRequest.getUnitNumber());
-		processorResponse.setInvoiceNumber(posRequest.getTrnNo());
 		
 		String header = response.substring(0,17);
 		String body = response.substring(18);
@@ -481,9 +477,9 @@ public class ComdataProcessingProvider extends AbstractProcessingProvider {
 	public boolean validatePOSRequest(PosAuthorization posRequest) {
 		if (posRequest.getUnitNumber() == null || posRequest.getUnitNumber().trim().length() == 0) {
 			return false;
-		} else { 
-			return true;
-		}
+		} 
+		
+		return true;
 	}
 
 	@Override

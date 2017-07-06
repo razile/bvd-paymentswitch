@@ -2,11 +2,11 @@ package com.bvd.paymentswitch.jpa.service;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
 import com.bvd.paymentswitch.models.CompletedAuthorization;
 import com.bvd.paymentswitch.models.FuelCode;
+import com.bvd.paymentswitch.models.IncompleteAuthorization;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.PaymentProcessor;
@@ -16,9 +16,6 @@ import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
 
 public interface AuthorizationService {
 	
-	Future<PosAuthorization> saveAuthorization(PosAuthorization k);
-
-	Future<ProcessorAuthorization> saveAuthorization(ProcessorAuthorization p, ProcessingProvider provider);
 	
 	PaymentProcessor savePaymentProcessor(PaymentProcessor p);
 	
@@ -43,4 +40,9 @@ public interface AuthorizationService {
 	List<RejectedAuthorization> getRejectedAuthorizations(Timestamp startTS, Timestamp endTS);
 	
 	String getFuelCodeForAuthorization(String authId, Timestamp ts);
+	
+	List<IncompleteAuthorization> getIncompleteAuthorizations(Timestamp startTS, Timestamp endTS);
+
+	void saveAuthorizationTransaction(PosAuthorization request, ProcessorAuthorization response,
+			ProcessingProvider provider);
 }

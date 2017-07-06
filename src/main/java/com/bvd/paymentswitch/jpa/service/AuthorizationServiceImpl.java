@@ -3,6 +3,7 @@ package com.bvd.paymentswitch.jpa.service;
 import com.bvd.paymentswitch.models.BinPaymentProcessor;
 import com.bvd.paymentswitch.models.CompletedAuthorization;
 import com.bvd.paymentswitch.models.FuelCode;
+import com.bvd.paymentswitch.models.IncompleteAuthorization;
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.MerchantCode;
 import com.bvd.paymentswitch.models.MerchantCodePK;
@@ -14,7 +15,6 @@ import com.bvd.paymentswitch.utils.ProtocolUtils;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import javax.transaction.Transactional;
 
@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,8 +29,7 @@ import org.springframework.stereotype.Service;
 public class AuthorizationServiceImpl implements AuthorizationService {
 	
 	static final Logger logger = LoggerFactory.getLogger(AuthorizationService.class);
-	static final Logger requestLogger = LoggerFactory.getLogger("Request-Persistence-Logger");
-	static final Logger responseLogger = LoggerFactory.getLogger("Response-Persistence-Logger");
+	static final Logger persistenceLogger = LoggerFactory.getLogger("Persistence-Logger");
 	
 	private final POSAuthorizationRepository posRepository;
 	private final ProcessorAuthorizationRepository processorRepository;
@@ -41,11 +39,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private final FuelCodeRepository fuelCodeRepository;
 	private final CompletedAuthorizationRepository completedAuthRepository;
 	private final RejectedAuthorizationRepository rejectedAuthRepository;
+	private final IncompleteAuthorizationRepository incompleteAuthRepository;
 	
 	public AuthorizationServiceImpl(POSAuthorizationRepository posRepository, ProcessorAuthorizationRepository processorRepository,
 									BinPaymentProcessorRepository binRepository,PaymentProcessorRepository paymentProcessorRepository,
 									MerchantCodeRepository merchantCodeRepository, FuelCodeRepository fuelCodeRepository, 
-									CompletedAuthorizationRepository completedAuthRepository, RejectedAuthorizationRepository rejectedAuthRepository) {
+									CompletedAuthorizationRepository completedAuthRepository, RejectedAuthorizationRepository rejectedAuthRepository,
+									IncompleteAuthorizationRepository incompleteAuthRepository) {
 		this.posRepository = posRepository;
 		this.processorRepository = processorRepository;
 		this.binRepository = binRepository;
@@ -54,37 +54,40 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		this.fuelCodeRepository = fuelCodeRepository;
 		this.completedAuthRepository = completedAuthRepository;
 		this.rejectedAuthRepository = rejectedAuthRepository;
+		this.incompleteAuthRepository = incompleteAuthRepository;
 	}
 	
 	
-	@Override
-	@Async("threadPoolTaskExecutor")
-	public Future<PosAuthorization> saveAuthorization(PosAuthorization k) {
-		
-		try {
-			k.setCreateTimestamp(ProtocolUtils.getUTCTimestamp());
-			k = posRepository.save(k);
-		} catch (Exception e) {
-			// write to a file if failed
-			logger.error("Unable to persist KardallHostAuthorization for Trn: " + k.getTrnNo() + ", Error: " +  e.getMessage());
-			requestLogger.info(k.toString());
-		}
-		return new AsyncResult<>(k);
-	}
 
 	@Override
 	@Async("threadPoolTaskExecutor")
-	public Future<ProcessorAuthorization> saveAuthorization(ProcessorAuthorization p, ProcessingProvider provider) {
-		
+	public void saveAuthorizationTransaction(PosAuthorization request, ProcessorAuthorization response, ProcessingProvider provider) {
+		Timestamp create_ts = ProtocolUtils.getUTCTimestamp();
+		Long req_id = null;
 		try {
-			p.setCreateTimestamp(ProtocolUtils.getUTCTimestamp());
-			p = processorRepository.save(p);
+			
+			request.setCreateTimestamp(create_ts);
+			request = posRepository.save(request);
+			req_id = request.getId();
+			response.setRequestId(req_id);
+			response.setCreateTimestamp(create_ts);
+			response.setCardNumber(request.getCard1());
+			response.setCardToken(request.getTrack2Data());
+			response.setUnitNumber(request.getUnitNumber());
+			response.setDriverID(request.getDriverId());
+			response.setInvoiceNumber(request.getTrnNo());
+			
+			String authCode = response.getAuthorizationCode();
+			if ( authCode == null || authCode.length()==0 ) {
+				response.setAuthorizationCode(request.getAuthId());
+			}
+			
+			processorRepository.save(response);
 		} catch (Exception e) {
 			// write to a file if failed
-			logger.error("Unable to persist PriorPostAuthorization for Trn: " + p.getInvoiceNumber() + ", Error: " +  e.getMessage());
-			responseLogger.info(provider.formatProcessorRequest(p));
+			logger.error("Unable to persist transactions for Trn: " + response.getInvoiceNumber() + ", Error: " +  e.getMessage());
+			persistenceLogger.info("TS:" + create_ts + ",ID:" + req_id + ",POS:" + request.toString() + ",PROC:" +  provider.formatProcessorRequest(response));
 		}
-		return new AsyncResult<>(p);
 	}
 
 
@@ -215,6 +218,20 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			return posRepository.findByAuthIdAndDateTime(authId, ts);
 		} catch (Exception e) {
 			return null;
+		}
+	}
+
+
+	@Override
+	public List<IncompleteAuthorization> getIncompleteAuthorizations(Timestamp startTS, Timestamp endTS) {
+		if (startTS != null) {
+			if (endTS != null) {
+				return  incompleteAuthRepository.findByCreateTimestampBetween(startTS, endTS);		
+			} else {
+				return incompleteAuthRepository.findByCreateTimestampAfter(startTS);
+			} 
+		} else {
+			return (List<IncompleteAuthorization>) incompleteAuthRepository.findAll();
 		}
 	}
 	

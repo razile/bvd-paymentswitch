@@ -2,22 +2,26 @@ package com.bvd.paymentswitch.processing.client;
 
 
 
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Provider;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
+import com.bvd.paymentswitch.models.ProcessorAuthorization;
 import com.bvd.paymentswitch.processing.provider.ProcessingProvider;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
 
 @Component
@@ -25,9 +29,9 @@ import io.netty.handler.ssl.SslContext;
 @Scope("prototype")
 public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> {
 
-    private ChannelHandlerContext posCtx;
     private PosAuthorization posRequest;
     private ProcessingProvider provider;
+    private ProcessorAuthorization processorRequest;
     
 	@Autowired
 	private Provider<AuthorizationHandler> authHandlerProvider;
@@ -36,14 +40,16 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	@Qualifier("sslClientContext")
 	private SslContext sslCtx;
 	
-        
-    public void intializeContext(PosAuthorization request, ProcessingProvider provider, ChannelHandlerContext posCtx) {
-    	this.posCtx = posCtx;
-    	this.posRequest = request;
-    	this.provider = provider;
-    }
+	@Value("${processor.timeout.seconds}")
+	private long timeout;
 	
-   
+	
+ 
+    public void initializePOSContext(PosAuthorization posRequest, ProcessorAuthorization processorRequest, ProcessingProvider processingProvider) {
+		this.posRequest = posRequest;
+		this.provider = processingProvider;
+		this.processorRequest = processorRequest;
+	}
 
 	@Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -54,6 +60,8 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 	    		p.addLast(sslCtx.newHandler(ch.alloc()));
 	    	}
     	}
+    	
+    	p.addLast(new ReadTimeoutHandler(timeout, TimeUnit.SECONDS));
     	// the first decoder will look for the <ETX> end of text ASCII char.
 		// This will produce a substring starting with <STX>
 		p.addLast(new DelimiterBasedFrameDecoder(32768, provider.getFrameDelimiter()));
@@ -65,14 +73,14 @@ public class AuthorizationInitializer extends ChannelInitializer<SocketChannel> 
 		
       
         // add the handler class containing processing business logic
-        p.addLast(authorizationHandler(posRequest, provider, posCtx));
+        p.addLast(authorizationHandler(posRequest, provider));
     }
 	
     
 	
-	public AuthorizationHandler authorizationHandler(PosAuthorization posRequest, ProcessingProvider provider, ChannelHandlerContext posCtx) {
+	public AuthorizationHandler authorizationHandler(PosAuthorization posRequest, ProcessingProvider provider) {
 		AuthorizationHandler handler = authHandlerProvider.get();
-		handler.initializePOSContext(posRequest, provider, posCtx);
+		handler.initializePOSContext(posRequest, processorRequest, provider);
 		return handler;
 	}
 	

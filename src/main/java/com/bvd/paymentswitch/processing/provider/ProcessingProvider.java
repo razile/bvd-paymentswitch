@@ -31,7 +31,7 @@ public interface ProcessingProvider {
 	
 	ProcessorAuthorization createProcessorRequest(PosAuthorization posRequest, String merchantCode);
 
-	void saveProcessorAuthorization(ProcessorAuthorization auth);
+	void saveAuthorization(PosAuthorization request, ProcessorAuthorization response);
 
 	void setPosPrompts(ProcessorAuthorization processorResponse, PosAuthorization posResponse);
 	
@@ -40,6 +40,8 @@ public interface ProcessingProvider {
 	boolean validatePOSRequest(PosAuthorization posRequest);
 	
 	void setRequiredPrompts(PosAuthorization posRequest, PosAuthorization posResponse);
+
+	boolean validateCompletionAmount(PosAuthorization posRequest);
 	
 	
 }

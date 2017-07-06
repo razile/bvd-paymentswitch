@@ -15,7 +15,7 @@ import javax.persistence.Transient;
 
 @Entity
 @Table(name="processor_authorization",
-		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type,response_code", unique=true),
+		indexes = {@Index(name="idx_comdata_query", columnList="invoice_number,card_number,unit_number,type,response_code,request_id", unique=false),
 					@Index(name="idx_processor_create_ts", columnList="create_timestamp",unique=false),
 					@Index(name="idx_processor_invoice", columnList="invoice_number", unique=false) 
 					})
@@ -25,6 +25,9 @@ public class ProcessorAuthorization {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
 	// required fields - header
+	
+	@Column(name="request_id")
+	private Long requestId;
 	
 	@Column(name="type", length=7)
 	private String type;				// Character (2)	Request: IC (pre), AC (post)  VC (void), Response: PC (pre-approved), RC (post/void-approved), XC or EC (declined)
@@ -596,6 +599,19 @@ public class ProcessorAuthorization {
 		this.sellingPrice = sellingPrice;
 	}
 
+
+
+	public Long getRequestId() {
+		return requestId;
+	}
+
+
+
+	public void setRequestId(Long requestId) {
+		this.requestId = requestId;
+	}
+
+	
 
 	
 	
