@@ -342,6 +342,7 @@ public class PosAuthorization {
 		String reqbmp2 = "111111" + this.trainingExclusionTimes + this.transactionType;
 		
 		String auth = this.authId;
+		if (auth == null) auth = "000000000000";
 		while (auth.length() < 12) {
 			auth += " ";
 		}

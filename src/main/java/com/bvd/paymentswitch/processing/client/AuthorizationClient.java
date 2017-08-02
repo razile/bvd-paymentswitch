@@ -50,6 +50,7 @@ public class AuthorizationClient {
 		b.group(group).channel(NioSocketChannel.class).handler(authorizationInitializer(posRequest, processorRequest, provider));
 
 		channelFuture = b.connect(p.getHost(), p.getPort());
+		//channelFuture = b.connect("localhost", 10090);
 
 		logger.debug("Connected to: " + p.getHost() + ":" + p.getPort());
 
