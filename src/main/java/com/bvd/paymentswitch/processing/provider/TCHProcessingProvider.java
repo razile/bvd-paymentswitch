@@ -5,14 +5,14 @@ import java.math.RoundingMode;
 
 import com.bvd.paymentswitch.models.PosAuthorization;
 import com.bvd.paymentswitch.models.ProcessorAuthorization;
-import com.bvd.paymentswitch.protocol.PrePostEncoder;
 import com.bvd.paymentswitch.protocol.STX_ETX_Decoder;
+import com.bvd.paymentswitch.protocol.TCHEncoder;
 
 public class TCHProcessingProvider extends PriorPostAbstractProcessingProvider {
 
 	@Override
 	public void setProtocolCodecs() {
-		encoder = new PrePostEncoder();
+		encoder = new TCHEncoder();
 		decoder = new STX_ETX_Decoder();
 	}
 
