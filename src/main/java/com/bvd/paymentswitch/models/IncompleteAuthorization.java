@@ -42,6 +42,23 @@ public class IncompleteAuthorization {
 	
 	@Column 
 	private String cardNumber;
+	
+	@Column 
+	private String driverId;
+	
+	@Column 
+	private String unitNumber;
+	
+	@Column 
+	private String odometer;
+	
+	@Column 
+	private String hubometer;
+	
+	@Column 
+	private String fuelType;
+	
+	
 
 	public String getAuthorizationCode() {
 		return authorizationCode;
@@ -98,6 +115,48 @@ public class IncompleteAuthorization {
 	public void setCardNumber(String cardNumber) {
 		this.cardNumber = cardNumber;
 	}
+
+	public String getDriverId() {
+		return driverId;
+	}
+
+	public void setDriverId(String driverId) {
+		this.driverId = driverId;
+	}
+
+	public String getUnitNumber() {
+		return unitNumber;
+	}
+
+	public void setUnitNumber(String unitNumber) {
+		this.unitNumber = unitNumber;
+	}
+
+	public String getOdometer() {
+		return odometer;
+	}
+
+	public void setOdometer(String odometer) {
+		this.odometer = odometer;
+	}
+
+	public String getHubometer() {
+		return hubometer;
+	}
+
+	public void setHubometer(String hubometer) {
+		this.hubometer = hubometer;
+	}
+
+	public String getFuelType() {
+		return fuelType;
+	}
+
+	public void setFuelType(String fuelType) {
+		this.fuelType = fuelType;
+	}
+	
+	
 	
 	
 	
