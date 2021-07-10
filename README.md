@@ -1,48 +1,4 @@
-# BVD Payment Switch
-
-# Table of Contents
-
-[Application Architecture](#_Toc481951007)
-
-[Spring Boot Framework](#_Toc481951008)
-
-[Netty NIO Server](#_Toc481951009)
-
-[The Authorization Client](#_Toc481951010)
-
-[Spring Boot Profiles (Application Configuration) 3](#_Toc481951011)
-
-[Web Services](#_Toc481951012)
-
-[Data Model](#_Toc481951013)
-
-[Application Logging](#_Toc481951014)
-
-[Build and Deployment](#_Toc481951015)
-
-[Project Structure](#_Toc481951016)
-
-[Maven Build](#_Toc481951017)
-
-[Running as Standalone Application (Staging)](#_Toc481951018)
-
-[Running as a Linux Service (Production)](#_Toc481951019)
-
-[How To&#39;s](#_Toc481951020)
-
-[Deploying an Update to Production](#_Toc481951021)
-
-[Adding a new BIN mapping for a Payment Processor](#_Toc481951022)
-
-[Add a new POS site](#_Toc481951023)
-
-[Add a new Payment Processor](#_Toc481951024)
-
-#
-
-#
-
-# Application Architecture
+# BVD Payment Switch - Application Architecture
 
 ## Spring Boot Framework
 
